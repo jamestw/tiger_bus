@@ -24,7 +24,7 @@ export async function getCalendarView(
     trips = driver ? trips.filter((t) => t.driverId === driver.id) : []
   }
 
-  const driverIds = [...new Set(trips.map((t) => t.driverId))]
+  const driverIds = Array.from(new Set(trips.map((t) => t.driverId)))
   const drivers = await db.driver.findMany({ where: { id: { in: driverIds } } })
   const driverNameById = new Map(drivers.map((d) => [d.id, d.name]))
 
