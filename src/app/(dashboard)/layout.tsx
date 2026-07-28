@@ -1,6 +1,15 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import type { Role } from '@/lib/rbac'
+import { NavLinks } from './nav-links'
+
+const ROLE_LABEL: Record<Role, string> = {
+  SUPERADMIN: 'Superadmin',
+  TENANT_ADMIN: '車行管理者',
+  DISPATCHER: '調度接單',
+  ACCOUNTANT: '會計',
+  DRIVER: '司機',
+}
 
 const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/overview', label: '儀表板總覽', roles: ['SUPERADMIN', 'TENANT_ADMIN', 'ACCOUNTANT'] },
@@ -21,19 +30,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
-        <div className="app-sidebar__brand">Tiger Bus 調度系統</div>
-        <div className="app-sidebar__user">
-          {session.user.name}
-          <br />
-          {session.user.role}
+        <div className="app-sidebar__brand">
+          Tiger Bus
+          <span>調度管理系統</span>
         </div>
-        <nav>
-          {visibleItems.map((item) => (
-            <a key={item.href} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <div className="app-sidebar__user">
+          <strong>{session.user.name}</strong>
+          {ROLE_LABEL[session.user.role]}
+        </div>
+        <NavLinks items={visibleItems} />
       </aside>
       <div className="app-content">{children}</div>
     </div>

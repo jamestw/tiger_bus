@@ -14,6 +14,7 @@ export default function LoginPage() {
           })
         }}
       >
+        <div className="login-form__kicker">Tiger Bus 調度管理系統</div>
         <h1>登入</h1>
         <label>
           Email
