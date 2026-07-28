@@ -70,6 +70,7 @@ describe('trips API handlers', () => {
     })
 
     const updated = await updateTrip(testDb, adminSession, trip.id, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-27'),
       clientId: clientB.id, passengerCount: 22, driverId: driverB.id,
     })
 
@@ -77,6 +78,7 @@ describe('trips API handlers', () => {
     expect(updated.passengerCount).toBe(22)
     expect(updated.driverId).toBe(driverB.id)
     expect(updated.vehicleId).toBe(vehicleB.id)
+    expect(updated.endDate).toEqual(new Date('2026-07-27'))
   })
 
   it('rejects trip update from an ACCOUNTANT-role session', async () => {
@@ -100,6 +102,7 @@ describe('trips API handlers', () => {
 
     await expect(
       updateTrip(testDb, accountantSession, trip.id, {
+        startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
         clientId: client.id, passengerCount: 99, driverId: driver.id,
       })
     ).rejects.toThrow()

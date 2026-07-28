@@ -17,7 +17,10 @@ async function updateTripAction(formData: FormData) {
   const session = await auth()
   if (!session?.user) return
   const tripId = formData.get('tripId') as string
+  const startDate = formData.get('startDate') as string
   await updateTrip(db, session.user, tripId, {
+    startDate: new Date(startDate),
+    endDate: new Date((formData.get('endDate') as string) || startDate),
     clientId: formData.get('clientId') as string,
     passengerCount: Number(formData.get('passengerCount')),
     driverId: formData.get('driverId') as string,
@@ -148,6 +151,23 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
               <h2 style={{ marginTop: '1.25rem' }}>編輯行程</h2>
               <form action={updateTripAction} className="inline-form">
                 <input type="hidden" name="tripId" value={trip.id} />
+                <div className="field">
+                  <label>開始日期</label>
+                  <input
+                    name="startDate"
+                    type="date"
+                    defaultValue={trip.startDate.toISOString().slice(0, 10)}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>結束日期（跨天才需填）</label>
+                  <input
+                    name="endDate"
+                    type="date"
+                    defaultValue={trip.endDate.toISOString().slice(0, 10)}
+                  />
+                </div>
                 <div className="field">
                   <label>客戶</label>
                   <select name="clientId" required defaultValue={trip.clientId}>

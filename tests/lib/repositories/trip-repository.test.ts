@@ -44,6 +44,31 @@ describe('TripRepository', () => {
     expect(trip.status).toBe('PENDING')
   })
 
+  it('rejects creating a trip where endDate is before startDate', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+
+    await expect(
+      repo.create({
+        startDate: new Date('2026-07-29'),
+        endDate: new Date('2026-07-28'),
+        routeDescription: '九份一日遊',
+        passengerCount: 20,
+        clientId: client.id,
+        bookedById: booker.id,
+        driverId: driver.id,
+      })
+    ).rejects.toThrow(/結束日期|endDate/)
+  })
+
   it('throws if the driver has no default vehicle bound', async () => {
     const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
     const driver = await new DriverRepository(testDb, tenant.id).create({ name: '無車司機' })
@@ -141,6 +166,7 @@ describe('TripRepository', () => {
     expect(trip.vehicleId).toBe(vehicleA.id)
 
     const updated = await repo.update(trip.id, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-27'),
       clientId: clientB.id, passengerCount: 18, driverId: driverB.id,
     })
 
@@ -148,6 +174,32 @@ describe('TripRepository', () => {
     expect(updated.passengerCount).toBe(18)
     expect(updated.driverId).toBe(driverB.id)
     expect(updated.vehicleId).toBe(vehicleB.id)
+    expect(updated.endDate).toEqual(new Date('2026-07-27'))
+  })
+
+  it('rejects updating a trip so that endDate is before startDate', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+
+    await expect(
+      repo.update(trip.id, {
+        startDate: new Date('2026-07-29'), endDate: new Date('2026-07-28'),
+        clientId: client.id, passengerCount: 10, driverId: driver.id,
+      })
+    ).rejects.toThrow(/結束日期|endDate/)
   })
 
   it('rejects updating a trip to a driver with no default vehicle bound', async () => {
@@ -169,7 +221,10 @@ describe('TripRepository', () => {
     })
 
     await expect(
-      repo.update(trip.id, { clientId: client.id, passengerCount: 10, driverId: driverNoVehicle.id })
+      repo.update(trip.id, {
+        startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+        clientId: client.id, passengerCount: 10, driverId: driverNoVehicle.id,
+      })
     ).rejects.toThrow(/default vehicle/)
   })
 

@@ -34,6 +34,8 @@ export async function PATCH(request: Request) {
 
   const body = await request.json()
   const trip = await updateTrip(db, session.user, body.tripId, {
+    startDate: new Date(body.startDate),
+    endDate: new Date(body.endDate),
     clientId: body.clientId,
     passengerCount: body.passengerCount,
     driverId: body.driverId,

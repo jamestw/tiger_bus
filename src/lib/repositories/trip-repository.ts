@@ -19,6 +19,10 @@ export class TripRepository {
     bookedById: string
     driverId: string
   }): Promise<Trip> {
+    if (input.endDate < input.startDate) {
+      throw new Error('結束日期不能早於開始日期 (endDate must not be before startDate)')
+    }
+
     const driver = await this.db.driver.findUnique({ where: { id: input.driverId } })
     if (!driver || driver.tenantId !== this.tenantId) {
       throw new Error(`Driver ${input.driverId} not found in tenant ${this.tenantId}`)
@@ -62,10 +66,20 @@ export class TripRepository {
 
   async update(
     tripId: string,
-    input: { clientId: string; passengerCount: number; driverId: string }
+    input: {
+      startDate: Date
+      endDate: Date
+      clientId: string
+      passengerCount: number
+      driverId: string
+    }
   ): Promise<Trip> {
     const trip = await this.findById(tripId)
     if (!trip) throw new Error(`Trip ${tripId} not found in tenant ${this.tenantId}`)
+
+    if (input.endDate < input.startDate) {
+      throw new Error('結束日期不能早於開始日期 (endDate must not be before startDate)')
+    }
 
     const driver = await this.db.driver.findUnique({ where: { id: input.driverId } })
     if (!driver || driver.tenantId !== this.tenantId) {
@@ -78,6 +92,8 @@ export class TripRepository {
     return this.db.trip.update({
       where: { id: tripId },
       data: {
+        startDate: input.startDate,
+        endDate: input.endDate,
         clientId: input.clientId,
         passengerCount: input.passengerCount,
         driverId: input.driverId,
