@@ -32,9 +32,11 @@ enum SettlementStatus {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  name         String
+  contactName  String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
 
   users             User[]
   drivers           Driver[]
@@ -44,6 +46,7 @@ model Tenant {
   trips             Trip[]
   tripLineItems     TripLineItem[]
   settlements       SettlementRecord[]
+  lineItemPresets   LineItemPreset[]
 }
 
 model User {
@@ -173,6 +176,18 @@ model TripLineItem {
 
   @@index([tenantId])
   @@index([tripId])
+}
+
+model LineItemPreset {
+  id        String       @id @default(cuid())
+  tenantId  String
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  name      String
+  type      LineItemType
+  createdAt DateTime     @default(now())
+
+  @@index([tenantId])
+  @@unique([tenantId, name, type])
 }
 
 model SettlementRecord {

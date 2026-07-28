@@ -6,6 +6,7 @@ export const testDb = new PrismaClient({ adapter })
 
 const TABLES_IN_DELETE_ORDER = [
   'TripLineItem',
+  'LineItemPreset',
   'SettlementRecord',
   'Trip',
   'VehicleFixedCost',
