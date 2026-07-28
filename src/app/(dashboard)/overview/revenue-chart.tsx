@@ -1,9 +1,9 @@
 type ChartPoint = { month: string; totalRevenue: number }
 
-const BAR_WIDTH = 48
-const GAP = 24
-const CHART_HEIGHT = 160
-const LABEL_SPACE = 40
+const BAR_WIDTH = 36
+const GAP = 20
+const CHART_HEIGHT = 100
+const LABEL_SPACE = 32
 
 export function RevenueChart({ data }: { data: ChartPoint[] }) {
   if (data.length === 0) return null

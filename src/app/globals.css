@@ -695,9 +695,9 @@ table {
 
 .revenue-chart {
   display: block;
-  width: 100%;
-  max-width: 640px;
-  height: auto;
+  width: auto;
+  height: 180px;
+  max-width: 100%;
 }
 
 .revenue-chart__bar {
