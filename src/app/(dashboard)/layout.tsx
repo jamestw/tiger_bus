@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { auth, signOut } from '@/lib/auth'
 import type { Role } from '@/lib/rbac'
 import { NavLinks } from './nav-links'
 
@@ -44,6 +44,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {ROLE_LABEL[session.user.role]}
         </div>
         <NavLinks items={visibleItems} />
+        <form
+          className="app-sidebar__footer"
+          action={async () => {
+            'use server'
+            await signOut({ redirectTo: '/login' })
+          }}
+        >
+          <button type="submit">登出</button>
+        </form>
       </aside>
       <div className="app-content">{children}</div>
     </div>

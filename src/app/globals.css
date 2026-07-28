@@ -145,6 +145,32 @@ table {
   font-weight: 600;
 }
 
+.app-sidebar__footer {
+  margin-top: auto;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-sidebar__footer button {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  background: transparent;
+  color: #c7c3b6;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-sidebar__footer button:hover {
+  color: #ffffff;
+  border-color: var(--danger);
+  background: rgba(209, 55, 47, 0.15);
+}
+
 .app-content {
   flex: 1;
   min-width: 0;
