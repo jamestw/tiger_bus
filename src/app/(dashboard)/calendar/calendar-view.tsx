@@ -30,12 +30,14 @@ export function CalendarView({
 
   return (
     <div>
-      <button onClick={() => setMode('driver-column')} disabled={mode === 'driver-column'}>
-        司機為欄
-      </button>
-      <button onClick={() => setMode('month')} disabled={mode === 'month'}>
-        月曆式
-      </button>
+      <div className="btn-group">
+        <button className="btn" onClick={() => setMode('driver-column')} disabled={mode === 'driver-column'}>
+          司機為欄
+        </button>
+        <button className="btn" onClick={() => setMode('month')} disabled={mode === 'month'}>
+          月曆式
+        </button>
+      </div>
 
       {mode === 'driver-column' ? (
         <DriverColumnTable trips={parsedTrips} range={range} />
@@ -54,8 +56,13 @@ function DriverColumnTable({
   range: { rangeStart: Date; rangeEnd: Date }
 }) {
   const view = buildDriverColumnView(trips, range)
+
+  if (view.drivers.length === 0) {
+    return <div className="empty-state">本月還沒有任何行程</div>
+  }
+
   return (
-    <table>
+    <table className="data-table">
       <thead>
         <tr>
           <th>日期</th>
@@ -71,9 +78,9 @@ function DriverColumnTable({
             {row.cells.map((cell) => (
               <td key={cell.driverId}>
                 {cell.trips.map((t) => (
-                  <div key={t.tripId} style={{ background: t.colorTag }}>
+                  <span key={t.tripId} className="trip-chip" style={{ background: t.colorTag }}>
                     {t.routeDescription} ({t.dayIndex}/{t.totalDays})
-                  </div>
+                  </span>
                 ))}
               </td>
             ))}
@@ -92,15 +99,16 @@ function MonthTable({
   range: { rangeStart: Date; rangeEnd: Date }
 }) {
   const view = buildMonthView(trips, range)
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+    <div className="month-grid">
       {view.days.map((day) => (
-        <div key={day.date.toISOString()} style={{ border: '1px solid #ccc', minHeight: 80 }}>
+        <div key={day.date.toISOString()} className="month-grid__day">
           <strong>{day.date.getDate()}</strong>
           {day.trips.map((t) => (
-            <div key={t.tripId} style={{ background: t.colorTag }}>
+            <span key={t.tripId} className="trip-chip" style={{ background: t.colorTag }}>
               {t.routeDescription}（{t.driverName}）第{t.dayIndex}天
-            </div>
+            </span>
           ))}
         </div>
       ))}

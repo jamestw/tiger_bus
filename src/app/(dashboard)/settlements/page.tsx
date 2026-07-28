@@ -11,8 +11,12 @@ export default async function SettlementsPage() {
     orderBy: { month: 'desc' },
   })
 
+  if (settlements.length === 0) {
+    return <div className="empty-state">還沒有任何結算單</div>
+  }
+
   return (
-    <table>
+    <table className="data-table">
       <thead>
         <tr>
           <th>司機</th>
