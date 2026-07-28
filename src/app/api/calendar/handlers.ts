@@ -9,15 +9,19 @@ import {
 } from '@/lib/calendar/build-calendar-view'
 import { requireRole, type SessionUser } from '@/lib/rbac'
 
-export async function getCalendarView(
+// Shared by the API route and the calendar UI page, so both apply the same
+// DRIVER-role filtering. Do not fetch trips for the calendar any other way —
+// bypassing this let a DRIVER session see every other driver's schedule.
+export async function listCalendarTrips(
   db: PrismaClient,
   session: SessionUser,
-  input: { rangeStart: Date; rangeEnd: Date; mode: 'driver-column' | 'month' }
-) {
+  rangeStart: Date,
+  rangeEnd: Date
+): Promise<CalendarTrip[]> {
   requireRole(session, ['TENANT_ADMIN', 'DISPATCHER', 'ACCOUNTANT', 'DRIVER'])
 
   const tripRepo = new TripRepository(db, session.tenantId!)
-  let trips = await tripRepo.listOverlappingRange(input.rangeStart, input.rangeEnd)
+  let trips = await tripRepo.listOverlappingRange(rangeStart, rangeEnd)
 
   if (session.role === 'DRIVER') {
     const driver = await new DriverRepository(db, session.tenantId!).findByUserId(session.id)
@@ -28,7 +32,7 @@ export async function getCalendarView(
   const drivers = await db.driver.findMany({ where: { id: { in: driverIds } } })
   const driverNameById = new Map(drivers.map((d) => [d.id, d.name]))
 
-  const calendarTrips: CalendarTrip[] = trips.map((t) => ({
+  return trips.map((t) => ({
     id: t.id,
     driverId: t.driverId,
     driverName: driverNameById.get(t.driverId) ?? '未知司機',
@@ -37,7 +41,14 @@ export async function getCalendarView(
     endDate: t.endDate,
     colorTag: colorTagForClient(t.clientId),
   }))
+}
 
+export async function getCalendarView(
+  db: PrismaClient,
+  session: SessionUser,
+  input: { rangeStart: Date; rangeEnd: Date; mode: 'driver-column' | 'month' }
+) {
+  const calendarTrips = await listCalendarTrips(db, session, input.rangeStart, input.rangeEnd)
   const range = { rangeStart: input.rangeStart, rangeEnd: input.rangeEnd }
 
   if (input.mode === 'driver-column') {

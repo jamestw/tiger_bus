@@ -1,6 +1,6 @@
 import type { PrismaClient, Trip, TripStatus } from '@prisma/client'
 
-const ALLOWED_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
+export const TRIP_STATUS_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
   CONFIRMED: ['COMPLETED', 'CANCELLED'],
   COMPLETED: [],
@@ -64,7 +64,7 @@ export class TripRepository {
     const trip = await this.findById(tripId)
     if (!trip) throw new Error(`Trip ${tripId} not found in tenant ${this.tenantId}`)
 
-    if (!ALLOWED_TRANSITIONS[trip.status].includes(nextStatus)) {
+    if (!TRIP_STATUS_TRANSITIONS[trip.status].includes(nextStatus)) {
       throw new Error(`Illegal transition from ${trip.status} to ${nextStatus}`)
     }
 
