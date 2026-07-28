@@ -1,7 +1,12 @@
 import { redirect } from 'next/navigation'
 import { auth, signOut } from '@/lib/auth'
 import type { Role } from '@/lib/rbac'
-import { NavLinks } from './nav-links'
+import { SidebarShell } from './sidebar-shell'
+
+async function signOutAction() {
+  'use server'
+  await signOut({ redirectTo: '/login' })
+}
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPERADMIN: 'Superadmin',
@@ -35,26 +40,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="app-sidebar__brand">
-          Tiger Bus
-          <span>調度管理系統</span>
-        </div>
-        <div className="app-sidebar__user">
-          <strong>{session.user.name}</strong>
-          {ROLE_LABEL[session.user.role]}
-        </div>
-        <NavLinks items={visibleItems} />
-        <form
-          className="app-sidebar__footer"
-          action={async () => {
-            'use server'
-            await signOut({ redirectTo: '/login' })
-          }}
-        >
-          <button type="submit">登出</button>
-        </form>
-      </aside>
+      <SidebarShell
+        userName={session.user.name}
+        roleLabel={ROLE_LABEL[session.user.role]}
+        navItems={visibleItems}
+        signOutAction={signOutAction}
+      />
       <div className="app-content">{children}</div>
     </div>
   )
