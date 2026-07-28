@@ -76,6 +76,13 @@ table {
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0 1.25rem;
+  /* Pin to the viewport instead of stretching to match tall page content
+     (e.g. the full-month calendar table) — otherwise the sign-out button
+     at the bottom ends up scrolled far out of view on long pages. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .app-sidebar__brand {
