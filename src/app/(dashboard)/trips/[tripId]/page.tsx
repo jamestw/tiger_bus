@@ -71,83 +71,89 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
       <a href="/trips">← 回行程列表</a>
       <h1>{trip.routeDescription}</h1>
 
-      <div className="app-section">
-        <h2>行程資訊</h2>
-        <table className="data-table">
-          <tbody>
-            <tr>
-              <td>日期</td>
-              <td>
-                {trip.startDate.toLocaleDateString('zh-TW')}
-                {trip.startDate.getTime() !== trip.endDate.getTime() &&
-                  ` ～ ${trip.endDate.toLocaleDateString('zh-TW')}`}
-              </td>
-            </tr>
-            <tr>
-              <td>客戶</td>
-              <td>{client?.name ?? '—'}</td>
-            </tr>
-            <tr>
-              <td>司機</td>
-              <td>{driver?.name ?? '—'}</td>
-            </tr>
-            <tr>
-              <td>人數</td>
-              <td>{trip.passengerCount}</td>
-            </tr>
-            <tr>
-              <td>狀態</td>
-              <td>
-                {STATUS_LABEL[trip.status]}
-                {canManage && nextStatusOptions.length > 0 && (
-                  <form action={transitionStatusAction} className="row-form" style={{ display: 'inline-flex', marginLeft: '0.75rem' }}>
-                    <input type="hidden" name="tripId" value={trip.id} />
-                    <select name="nextStatus" required defaultValue="">
-                      <option value="" disabled>
-                        變更狀態
-                      </option>
-                      {nextStatusOptions.map((s) => (
-                        <option key={s} value={s}>
-                          {STATUS_LABEL[s]}
-                        </option>
-                      ))}
-                    </select>
-                    <button className="btn" type="submit">
-                      套用
-                    </button>
-                  </form>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {canSeeFinancials && (
+      <div className="two-col-grid">
         <div className="app-section">
-          <h2>收支總覽</h2>
+          <h2>行程資訊</h2>
           <table className="data-table">
             <tbody>
               <tr>
-                <td>收入合計</td>
-                <td>{revenue.toLocaleString()}</td>
-              </tr>
-              <tr>
-                <td>支出合計</td>
-                <td>{cost.toLocaleString()}</td>
-              </tr>
-              <tr>
+                <td>日期</td>
                 <td>
-                  <strong>淨額（司機該趟應收）</strong>
+                  {trip.startDate.toLocaleDateString('zh-TW')}
+                  {trip.startDate.getTime() !== trip.endDate.getTime() &&
+                    ` ～ ${trip.endDate.toLocaleDateString('zh-TW')}`}
                 </td>
+              </tr>
+              <tr>
+                <td>客戶</td>
+                <td>{client?.name ?? '—'}</td>
+              </tr>
+              <tr>
+                <td>司機</td>
+                <td>{driver?.name ?? '—'}</td>
+              </tr>
+              <tr>
+                <td>人數</td>
+                <td>{trip.passengerCount}</td>
+              </tr>
+              <tr>
+                <td>狀態</td>
                 <td>
-                  <strong>{(revenue - cost).toLocaleString()}</strong>
+                  {STATUS_LABEL[trip.status]}
+                  {canManage && nextStatusOptions.length > 0 && (
+                    <form action={transitionStatusAction} className="row-form" style={{ display: 'inline-flex', marginLeft: '0.75rem' }}>
+                      <input type="hidden" name="tripId" value={trip.id} />
+                      <select name="nextStatus" required defaultValue="">
+                        <option value="" disabled>
+                          變更狀態
+                        </option>
+                        {nextStatusOptions.map((s) => (
+                          <option key={s} value={s}>
+                            {STATUS_LABEL[s]}
+                          </option>
+                        ))}
+                      </select>
+                      <button className="btn" type="submit">
+                        套用
+                      </button>
+                    </form>
+                  )}
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <h2 style={{ marginTop: '1.25rem' }}>收支項目明細</h2>
+        {canSeeFinancials && (
+          <div className="app-section">
+            <h2>收支總覽</h2>
+            <table className="data-table">
+              <tbody>
+                <tr>
+                  <td>收入合計</td>
+                  <td>{revenue.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td>支出合計</td>
+                  <td>{cost.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>淨額（司機該趟應收）</strong>
+                  </td>
+                  <td>
+                    <strong>{(revenue - cost).toLocaleString()}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {canSeeFinancials && (
+        <div className="app-section">
+          <h2>收支項目明細</h2>
           {lineItems.length === 0 ? (
             <div className="empty-state">還沒有任何收支項目</div>
           ) : (
