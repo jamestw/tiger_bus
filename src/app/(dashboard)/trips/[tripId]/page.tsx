@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { addTripLineItem } from '@/app/api/trips/[tripId]/line-items/handlers'
 import { updateTrip } from '@/app/api/trips/handlers'
+import { listLineItemPresets } from '@/app/api/line-item-presets/handlers'
+import { AddLineItemForm } from './add-line-item-form'
 import { ClientRepository } from '@/lib/repositories/client-repository'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
@@ -81,6 +83,7 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
   const driver = await driverRepo.findById(trip.driverId)
   const activeClients = canManage ? await clientRepo.list() : []
   const activeDrivers = canManage ? await driverRepo.list() : []
+  const presets = canManage ? await listLineItemPresets(db, user) : []
   const lineItems = canSeeFinancials
     ? await new TripLineItemRepository(db, user.tenantId).listForTrip(trip.id)
     : []
@@ -255,27 +258,7 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
           )}
 
           {canManage && (
-            <form action={addLineItemAction} className="inline-form" style={{ marginTop: '1rem' }}>
-              <input type="hidden" name="tripId" value={trip.id} />
-              <div className="field">
-                <label>類型</label>
-                <select name="type" required defaultValue="REVENUE">
-                  <option value="REVENUE">收入</option>
-                  <option value="COST">支出</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>項目名稱</label>
-                <input name="name" placeholder="車資 / 油資" required />
-              </div>
-              <div className="field">
-                <label>金額</label>
-                <input name="amount" type="number" min="0" step="1" required />
-              </div>
-              <button className="btn" type="submit">
-                新增項目
-              </button>
-            </form>
+            <AddLineItemForm tripId={trip.id} presets={presets} addLineItemAction={addLineItemAction} />
           )}
         </div>
       )}

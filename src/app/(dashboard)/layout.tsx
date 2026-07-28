@@ -24,6 +24,7 @@ const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/vehicles', label: '車輛管理', roles: ['TENANT_ADMIN', 'DISPATCHER', 'ACCOUNTANT'] },
   { href: '/clients', label: '客戶管理', roles: ['TENANT_ADMIN', 'DISPATCHER', 'ACCOUNTANT'] },
   { href: '/settlements', label: '結算管理', roles: ['TENANT_ADMIN', 'ACCOUNTANT', 'DRIVER'] },
+  { href: '/settings', label: '車行設定', roles: ['TENANT_ADMIN'] },
 ]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
