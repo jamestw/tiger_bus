@@ -17,6 +17,47 @@ export default async function OverviewPage() {
   const canSeeTenantDetails = ['TENANT_ADMIN', 'ACCOUNTANT'].includes(session.user.role)
   const recentTrips = canSeeTenantDetails ? await getRecentTrips(db, session.user, RECENT_TRIPS_LIMIT) : []
 
+  const showChart = chartData.length > 0
+  const chartSection = showChart && (
+    <div className="app-section">
+      <h2>收入趨勢</h2>
+      <RevenueChart data={chartData} />
+    </div>
+  )
+  const recentTripsSection = canSeeTenantDetails && (
+    <div className="app-section">
+      <h2>最近行程</h2>
+      {recentTrips.length === 0 ? (
+        <div className="empty-state">還沒有任何行程</div>
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>名稱</th>
+              <th>客戶</th>
+              <th>車輛類型</th>
+              <th>人數</th>
+              <th>司機</th>
+              <th>電話</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentTrips.map((t) => (
+              <tr key={t.id}>
+                <td>{t.routeDescription}</td>
+                <td>{t.client.name}</td>
+                <td>{t.vehicle.type}</td>
+                <td>{t.passengerCount}</td>
+                <td>{t.driver.name}</td>
+                <td>{t.driver.phone ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+
   return (
     <div>
       <h1>儀表板總覽</h1>
@@ -43,11 +84,16 @@ export default async function OverviewPage() {
         </div>
       )}
 
-      {chartData.length > 0 && (
-        <div className="app-section">
-          <h2>收入趨勢</h2>
-          <RevenueChart data={chartData} />
+      {showChart && canSeeTenantDetails ? (
+        <div className="two-col-grid">
+          {chartSection}
+          {recentTripsSection}
         </div>
+      ) : (
+        <>
+          {chartSection}
+          {recentTripsSection}
+        </>
       )}
 
       <div className="app-section">
@@ -79,40 +125,6 @@ export default async function OverviewPage() {
           </table>
         )}
       </div>
-
-      {canSeeTenantDetails && (
-        <div className="app-section">
-          <h2>最近行程</h2>
-          {recentTrips.length === 0 ? (
-            <div className="empty-state">還沒有任何行程</div>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>名稱</th>
-                  <th>客戶</th>
-                  <th>車輛類型</th>
-                  <th>人數</th>
-                  <th>司機</th>
-                  <th>電話</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTrips.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.routeDescription}</td>
-                    <td>{t.client.name}</td>
-                    <td>{t.vehicle.type}</td>
-                    <td>{t.passengerCount}</td>
-                    <td>{t.driver.name}</td>
-                    <td>{t.driver.phone ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
     </div>
   )
 }
