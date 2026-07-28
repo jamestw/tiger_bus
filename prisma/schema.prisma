@@ -73,12 +73,14 @@ model Driver {
   defaultVehicleId String?
   defaultVehicle   Vehicle? @relation("DriverDefaultVehicle", fields: [defaultVehicleId], references: [id])
   createdAt        DateTime @default(now())
+  deletedAt        DateTime?
 
   ownedVehicles    Vehicle[]          @relation("VehicleOwnerDriver")
   trips            Trip[]
   settlements      SettlementRecord[]
 
   @@index([tenantId])
+  @@index([tenantId, deletedAt])
 }
 
 model Vehicle {
@@ -92,12 +94,14 @@ model Vehicle {
   driverId           String?
   driver             Driver?   @relation("VehicleOwnerDriver", fields: [driverId], references: [id])
   createdAt          DateTime  @default(now())
+  deletedAt          DateTime?
 
   defaultForDrivers Driver[]           @relation("DriverDefaultVehicle")
   fixedCosts        VehicleFixedCost[]
   trips             Trip[]
 
   @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@unique([tenantId, plateNumber])
 }
 
@@ -123,10 +127,12 @@ model Client {
   name      String
   phone     String?
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 
   trips     Trip[]
 
   @@index([tenantId])
+  @@index([tenantId, deletedAt])
 }
 
 model Trip {

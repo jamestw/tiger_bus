@@ -11,6 +11,13 @@ export class DriverRepository {
 
   list(): Promise<Driver[]> {
     return this.db.driver.findMany({
+      where: { tenantId: this.tenantId, deletedAt: null },
+      orderBy: { name: 'asc' },
+    })
+  }
+
+  listAll(): Promise<Driver[]> {
+    return this.db.driver.findMany({
       where: { tenantId: this.tenantId },
       orderBy: { name: 'asc' },
     })
@@ -26,6 +33,26 @@ export class DriverRepository {
     const driver = await this.db.driver.findUnique({ where: { userId } })
     if (!driver || driver.tenantId !== this.tenantId) return null
     return driver
+  }
+
+  async update(driverId: string, input: { name: string; phone?: string }): Promise<Driver> {
+    const driver = await this.findById(driverId)
+    if (!driver) throw new Error(`Driver ${driverId} not found in tenant ${this.tenantId}`)
+
+    return this.db.driver.update({
+      where: { id: driverId },
+      data: { name: input.name, phone: input.phone },
+    })
+  }
+
+  async softDelete(driverId: string): Promise<Driver> {
+    const driver = await this.findById(driverId)
+    if (!driver) throw new Error(`Driver ${driverId} not found in tenant ${this.tenantId}`)
+
+    return this.db.driver.update({
+      where: { id: driverId },
+      data: { deletedAt: new Date() },
+    })
   }
 
   async setDefaultVehicle(driverId: string, vehicleId: string): Promise<Driver> {

@@ -81,4 +81,48 @@ describe('DriverRepository', () => {
 
     expect(updated.defaultVehicleId).toBe(vehicle.id)
   })
+
+  it("updates a driver's name and phone", async () => {
+    const tenant = await makeTenant('Tiger Bus')
+    const repo = new DriverRepository(testDb, tenant.id)
+    const driver = await repo.create({ name: '志偉', phone: '0911111111' })
+
+    const updated = await repo.update(driver.id, { name: '志偉改名', phone: '0922222222' })
+
+    expect(updated.name).toBe('志偉改名')
+    expect(updated.phone).toBe('0922222222')
+  })
+
+  it('rejects updating a driver from another tenant', async () => {
+    const tenantA = await makeTenant('Tiger Bus')
+    const tenantB = await makeTenant('Other Bus Co')
+    const driverB = await new DriverRepository(testDb, tenantB.id).create({ name: 'B-driver' })
+
+    await expect(
+      new DriverRepository(testDb, tenantA.id).update(driverB.id, { name: 'hacked' })
+    ).rejects.toThrow()
+  })
+
+  it('soft-deletes a driver and excludes it from list()', async () => {
+    const tenant = await makeTenant('Tiger Bus')
+    const repo = new DriverRepository(testDb, tenant.id)
+    const driver = await repo.create({ name: '志偉' })
+
+    await repo.softDelete(driver.id)
+    const drivers = await repo.list()
+
+    expect(drivers).toHaveLength(0)
+  })
+
+  it('still includes soft-deleted drivers in listAll()', async () => {
+    const tenant = await makeTenant('Tiger Bus')
+    const repo = new DriverRepository(testDb, tenant.id)
+    const driver = await repo.create({ name: '志偉' })
+    await repo.softDelete(driver.id)
+
+    const all = await repo.listAll()
+
+    expect(all).toHaveLength(1)
+    expect(all[0].deletedAt).not.toBeNull()
+  })
 })
