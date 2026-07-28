@@ -16,6 +16,7 @@ async function updateProfileAction(formData: FormData) {
     name: formData.get('name') as string,
     contactName: (formData.get('contactName') as string) || null,
     contactPhone: (formData.get('contactPhone') as string) || null,
+    defaultCalendarView: formData.get('defaultCalendarView') === 'WEEK' ? 'WEEK' : 'MONTH',
   })
   revalidatePath('/settings')
 }
@@ -72,6 +73,13 @@ export default async function SettingsPage() {
           <div className="field">
             <label>聯絡電話</label>
             <input name="contactPhone" defaultValue={profile.contactPhone ?? ''} />
+          </div>
+          <div className="field">
+            <label>行事曆預設檢視</label>
+            <select name="defaultCalendarView" defaultValue={profile.defaultCalendarView}>
+              <option value="MONTH">月檢視</option>
+              <option value="WEEK">週檢視</option>
+            </select>
           </div>
           <button className="btn" type="submit">
             儲存

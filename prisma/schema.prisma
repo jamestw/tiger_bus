@@ -31,12 +31,18 @@ enum SettlementStatus {
   PAID
 }
 
+enum CalendarViewMode {
+  MONTH
+  WEEK
+}
+
 model Tenant {
-  id           String   @id @default(cuid())
-  name         String
-  contactName  String?
-  contactPhone String?
-  createdAt    DateTime @default(now())
+  id                  String           @id @default(cuid())
+  name                String
+  contactName         String?
+  contactPhone        String?
+  defaultCalendarView CalendarViewMode @default(MONTH)
+  createdAt           DateTime         @default(now())
 
   users             User[]
   drivers           Driver[]
@@ -59,28 +65,28 @@ model User {
   tenant       Tenant?  @relation(fields: [tenantId], references: [id])
   createdAt    DateTime @default(now())
 
-  driver       Driver?
-  bookedTrips  Trip[]   @relation("TripBookedBy")
+  driver      Driver?
+  bookedTrips Trip[]  @relation("TripBookedBy")
 
   @@index([tenantId])
 }
 
 model Driver {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   tenantId         String
-  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  tenant           Tenant    @relation(fields: [tenantId], references: [id])
   name             String
   phone            String?
-  userId           String?  @unique
-  user             User?    @relation(fields: [userId], references: [id])
+  userId           String?   @unique
+  user             User?     @relation(fields: [userId], references: [id])
   defaultVehicleId String?
-  defaultVehicle   Vehicle? @relation("DriverDefaultVehicle", fields: [defaultVehicleId], references: [id])
-  createdAt        DateTime @default(now())
+  defaultVehicle   Vehicle?  @relation("DriverDefaultVehicle", fields: [defaultVehicleId], references: [id])
+  createdAt        DateTime  @default(now())
   deletedAt        DateTime?
 
-  ownedVehicles    Vehicle[]          @relation("VehicleOwnerDriver")
-  trips            Trip[]
-  settlements      SettlementRecord[]
+  ownedVehicles Vehicle[]          @relation("VehicleOwnerDriver")
+  trips         Trip[]
+  settlements   SettlementRecord[]
 
   @@index([tenantId])
   @@index([tenantId, deletedAt])
@@ -103,9 +109,9 @@ model Vehicle {
   fixedCosts        VehicleFixedCost[]
   trips             Trip[]
 
+  @@unique([tenantId, plateNumber])
   @@index([tenantId])
   @@index([tenantId, deletedAt])
-  @@unique([tenantId, plateNumber])
 }
 
 model VehicleFixedCost {
@@ -124,15 +130,15 @@ model VehicleFixedCost {
 }
 
 model Client {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
   name      String
   phone     String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   deletedAt DateTime?
 
-  trips     Trip[]
+  trips Trip[]
 
   @@index([tenantId])
   @@index([tenantId, deletedAt])
@@ -157,7 +163,7 @@ model Trip {
   status           TripStatus @default(PENDING)
   createdAt        DateTime   @default(now())
 
-  lineItems        TripLineItem[]
+  lineItems TripLineItem[]
 
   @@index([tenantId])
   @@index([driverId, startDate])
@@ -186,8 +192,8 @@ model LineItemPreset {
   type      LineItemType
   createdAt DateTime     @default(now())
 
-  @@index([tenantId])
   @@unique([tenantId, name, type])
+  @@index([tenantId])
 }
 
 model SettlementRecord {
@@ -204,6 +210,6 @@ model SettlementRecord {
   generatedAt   DateTime         @default(now())
   paidAt        DateTime?
 
-  @@index([tenantId])
   @@unique([tenantId, driverId, month])
+  @@index([tenantId])
 }

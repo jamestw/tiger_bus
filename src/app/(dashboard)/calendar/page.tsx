@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { listCalendarTrips } from '@/app/api/calendar/handlers'
+import { TenantRepository } from '@/lib/repositories/tenant-repository'
 import { CalendarView } from './calendar-view'
 import {
   getCalendarRange,
@@ -25,7 +26,15 @@ export default async function CalendarPage({
   const session = await auth()
   if (!session?.user) return null
 
-  const mode: CalendarMode = searchParams.mode === 'week' ? 'week' : 'month'
+  let mode: CalendarMode
+  if (searchParams.mode === 'week' || searchParams.mode === 'month') {
+    mode = searchParams.mode
+  } else {
+    const tenant = session.user.tenantId
+      ? await new TenantRepository(db, session.user.tenantId).get()
+      : null
+    mode = tenant?.defaultCalendarView === 'WEEK' ? 'week' : 'month'
+  }
   const anchor = searchParams.date ? parseDateParam(searchParams.date) : new Date()
 
   const { rangeStart, rangeEnd } = getCalendarRange(mode, anchor)

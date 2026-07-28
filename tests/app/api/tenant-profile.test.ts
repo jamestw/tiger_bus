@@ -14,10 +14,11 @@ describe('tenant-profile API handlers', () => {
     expect(before.name).toBe('測試車行')
 
     const updated = await updateTenantProfile(testDb, session, {
-      name: '測試車行（更新）', contactName: '陳老闆', contactPhone: '02-1111-2222',
+      name: '測試車行（更新）', contactName: '陳老闆', contactPhone: '02-1111-2222', defaultCalendarView: 'WEEK',
     })
 
     expect(updated.contactName).toBe('陳老闆')
+    expect(updated.defaultCalendarView).toBe('WEEK')
   })
 
   it('rejects updating the profile from a DISPATCHER-role session', async () => {
@@ -25,7 +26,9 @@ describe('tenant-profile API handlers', () => {
     const session = { id: 'u2', role: 'DISPATCHER' as const, tenantId: tenant.id }
 
     await expect(
-      updateTenantProfile(testDb, session, { name: 'x', contactName: null, contactPhone: null })
+      updateTenantProfile(testDb, session, {
+        name: 'x', contactName: null, contactPhone: null, defaultCalendarView: 'MONTH',
+      })
     ).rejects.toThrow()
   })
 })
