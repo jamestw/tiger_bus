@@ -42,6 +42,33 @@ describe('DriverRepository', () => {
     expect(result).toBeNull()
   })
 
+  it('finds the driver record linked to a given user id, scoped to tenant', async () => {
+    const tenant = await makeTenant('Tiger Bus')
+    const user = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'driver@test.com', passwordHash: 'x',
+        name: '陳大新', role: 'DRIVER',
+      },
+    })
+    const repo = new DriverRepository(testDb, tenant.id)
+    const driver = await testDb.driver.create({
+      data: { tenantId: tenant.id, name: '陳大新', userId: user.id },
+    })
+
+    const found = await repo.findByUserId(user.id)
+
+    expect(found?.id).toBe(driver.id)
+  })
+
+  it('returns null when the user has no linked driver record', async () => {
+    const tenant = await makeTenant('Tiger Bus')
+    const repo = new DriverRepository(testDb, tenant.id)
+
+    const found = await repo.findByUserId('nonexistent-user-id')
+
+    expect(found).toBeNull()
+  })
+
   it("updates a driver's default vehicle only within its own tenant", async () => {
     const tenant = await makeTenant('Tiger Bus')
     const vehicle = await testDb.vehicle.create({

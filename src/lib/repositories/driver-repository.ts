@@ -22,6 +22,12 @@ export class DriverRepository {
     return driver
   }
 
+  async findByUserId(userId: string): Promise<Driver | null> {
+    const driver = await this.db.driver.findUnique({ where: { userId } })
+    if (!driver || driver.tenantId !== this.tenantId) return null
+    return driver
+  }
+
   async setDefaultVehicle(driverId: string, vehicleId: string): Promise<Driver> {
     const driver = await this.findById(driverId)
     if (!driver) throw new Error(`Driver ${driverId} not found in tenant ${this.tenantId}`)
