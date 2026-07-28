@@ -1,4 +1,6 @@
-import type { PrismaClient, Trip, TripStatus } from '@prisma/client'
+import type { PrismaClient, Trip, TripStatus, Client, Driver, Vehicle } from '@prisma/client'
+
+export type TripWithDetails = Trip & { client: Client; driver: Driver; vehicle: Vehicle }
 
 export const TRIP_STATUS_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
@@ -99,6 +101,15 @@ export class TripRepository {
         driverId: input.driverId,
         vehicleId: driver.defaultVehicleId,
       },
+    })
+  }
+
+  listRecentWithDetails(limit: number): Promise<TripWithDetails[]> {
+    return this.db.trip.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { startDate: 'desc' },
+      take: limit,
+      include: { client: true, driver: true, vehicle: true },
     })
   }
 

@@ -691,6 +691,30 @@ table {
   color: var(--danger);
 }
 
+/* ---- Revenue chart ---- */
+
+.revenue-chart {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+}
+
+.revenue-chart__bar {
+  fill: var(--accent);
+}
+
+.revenue-chart__label {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+.revenue-chart__value {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
 .figure-positive {
   color: var(--success);
   font-weight: 700;

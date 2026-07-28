@@ -1,6 +1,10 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { getOperationsOverview } from '@/app/api/overview/handlers'
+import { getOperationsOverview, getRecentTrips } from '@/app/api/overview/handlers'
+import { RevenueChart } from './revenue-chart'
+
+const RECENT_TRIPS_LIMIT = 5
+const REVENUE_CHART_MONTHS = 6
 
 export default async function OverviewPage() {
   const session = await auth()
@@ -8,6 +12,10 @@ export default async function OverviewPage() {
 
   const overview = await getOperationsOverview(db, session.user)
   const latest = overview[overview.length - 1]
+  const chartData = overview.slice(-REVENUE_CHART_MONTHS)
+
+  const canSeeTenantDetails = ['TENANT_ADMIN', 'ACCOUNTANT'].includes(session.user.role)
+  const recentTrips = canSeeTenantDetails ? await getRecentTrips(db, session.user, RECENT_TRIPS_LIMIT) : []
 
   return (
     <div>
@@ -32,6 +40,13 @@ export default async function OverviewPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {chartData.length > 0 && (
+        <div className="app-section">
+          <h2>收入趨勢</h2>
+          <RevenueChart data={chartData} />
         </div>
       )}
 
@@ -64,6 +79,40 @@ export default async function OverviewPage() {
           </table>
         )}
       </div>
+
+      {canSeeTenantDetails && (
+        <div className="app-section">
+          <h2>最近行程</h2>
+          {recentTrips.length === 0 ? (
+            <div className="empty-state">還沒有任何行程</div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>名稱</th>
+                  <th>客戶</th>
+                  <th>車輛類型</th>
+                  <th>人數</th>
+                  <th>司機</th>
+                  <th>電話</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTrips.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.routeDescription}</td>
+                    <td>{t.client.name}</td>
+                    <td>{t.vehicle.type}</td>
+                    <td>{t.passengerCount}</td>
+                    <td>{t.driver.name}</td>
+                    <td>{t.driver.phone ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   )
 }

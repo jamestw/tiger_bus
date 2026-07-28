@@ -249,4 +249,74 @@ describe('TripRepository', () => {
 
     await expect(repo.transitionStatus(trip.id, 'PENDING')).rejects.toThrow(/transition/)
   })
+
+  it('lists the most recent trips (by start date desc) with client/driver/vehicle details, scoped to the tenant', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const otherTenant = await testDb.tenant.create({ data: { name: 'Other Bus Co' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    await repo.create({
+      startDate: new Date('2026-07-01'), endDate: new Date('2026-07-01'),
+      routeDescription: '較早的行程', passengerCount: 5,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+    await repo.create({
+      startDate: new Date('2026-07-20'), endDate: new Date('2026-07-20'),
+      routeDescription: '較新的行程', passengerCount: 8,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+    const { driver: otherDriver } = await seedTenantWithDriverAndVehicle(otherTenant.id)
+    const otherClient = await new ClientRepository(testDb, otherTenant.id).create({ name: '別的旅行社' })
+    const otherBooker = await testDb.user.create({
+      data: {
+        tenantId: otherTenant.id, email: 'other@test.com', passwordHash: 'x',
+        name: '別調度員', role: 'DISPATCHER',
+      },
+    })
+    await new TripRepository(testDb, otherTenant.id).create({
+      startDate: new Date('2026-07-25'), endDate: new Date('2026-07-25'),
+      routeDescription: '別車行的行程', passengerCount: 3,
+      clientId: otherClient.id, bookedById: otherBooker.id, driverId: otherDriver.id,
+    })
+
+    const recent = await repo.listRecentWithDetails(5)
+
+    expect(recent).toHaveLength(2)
+    expect(recent[0].routeDescription).toBe('較新的行程')
+    expect(recent[1].routeDescription).toBe('較早的行程')
+    expect(recent[0].client.name).toBe('長榮旅行社')
+    expect(recent[0].driver.name).toBe('志偉')
+    expect(recent[0].vehicle.type).toBe('大巴')
+  })
+
+  it('caps the recent trips list to the given limit', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    for (let i = 1; i <= 3; i++) {
+      await repo.create({
+        startDate: new Date(`2026-07-0${i}`), endDate: new Date(`2026-07-0${i}`),
+        routeDescription: `行程 ${i}`, passengerCount: 5,
+        clientId: client.id, bookedById: booker.id, driverId: driver.id,
+      })
+    }
+
+    const recent = await repo.listRecentWithDetails(2)
+
+    expect(recent).toHaveLength(2)
+  })
 })
