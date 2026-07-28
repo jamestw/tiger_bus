@@ -2,10 +2,12 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { createTrip, listTripsInRange } from '@/app/api/trips/handlers'
+import { createClient } from '@/app/api/clients/handlers'
 import { ClientRepository } from '@/lib/repositories/client-repository'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
 import { STATUS_LABEL } from '@/lib/trip-status-label'
+import { ClientCombobox } from './client-combobox'
 
 async function createTripAction(formData: FormData) {
   'use server'
@@ -21,6 +23,19 @@ async function createTripAction(formData: FormData) {
   })
   revalidatePath('/trips')
   revalidatePath('/calendar')
+}
+
+async function quickCreateClientAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) throw new Error('Unauthorized')
+  const client = await createClient(db, session.user, {
+    name: formData.get('name') as string,
+    phone: (formData.get('phone') as string) || undefined,
+  })
+  revalidatePath('/trips')
+  revalidatePath('/clients')
+  return { id: client.id, name: client.name, phone: client.phone }
 }
 
 export default async function TripsPage() {
@@ -75,19 +90,10 @@ export default async function TripsPage() {
               <label>人數</label>
               <input name="passengerCount" type="number" min="1" required />
             </div>
-            <div className="field">
-              <label>客戶</label>
-              <select name="clientId" required defaultValue="">
-                <option value="" disabled>
-                  選擇客戶
-                </option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <ClientCombobox
+              clients={clients.map((c) => ({ id: c.id, name: c.name, phone: c.phone }))}
+              quickCreateClientAction={quickCreateClientAction}
+            />
             <div className="field">
               <label>指派司機</label>
               <select name="driverId" required defaultValue="">
