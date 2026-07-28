@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { addTripLineItem } from '@/app/api/trips/[tripId]/line-items/handlers'
+import { updateTrip } from '@/app/api/trips/handlers'
 import { ClientRepository } from '@/lib/repositories/client-repository'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
@@ -10,6 +11,21 @@ import { TripRepository, TRIP_STATUS_TRANSITIONS } from '@/lib/repositories/trip
 import { STATUS_LABEL } from '@/lib/trip-status-label'
 import { requireRole } from '@/lib/rbac'
 import type { TripStatus } from '@prisma/client'
+
+async function updateTripAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  const tripId = formData.get('tripId') as string
+  await updateTrip(db, session.user, tripId, {
+    clientId: formData.get('clientId') as string,
+    passengerCount: Number(formData.get('passengerCount')),
+    driverId: formData.get('driverId') as string,
+  })
+  revalidatePath(`/trips/${tripId}`)
+  revalidatePath('/trips')
+  revalidatePath('/calendar')
+}
 
 async function addLineItemAction(formData: FormData) {
   'use server'
@@ -56,8 +72,12 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
   const canManage = ['TENANT_ADMIN', 'DISPATCHER', 'SUPERADMIN'].includes(user.role)
   const canSeeFinancials = ['TENANT_ADMIN', 'DISPATCHER', 'ACCOUNTANT', 'SUPERADMIN'].includes(user.role)
 
-  const client = await new ClientRepository(db, user.tenantId).findById(trip.clientId)
-  const driver = await new DriverRepository(db, user.tenantId).findById(trip.driverId)
+  const clientRepo = new ClientRepository(db, user.tenantId)
+  const driverRepo = new DriverRepository(db, user.tenantId)
+  const client = await clientRepo.findById(trip.clientId)
+  const driver = await driverRepo.findById(trip.driverId)
+  const activeClients = canManage ? await clientRepo.list() : []
+  const activeDrivers = canManage ? await driverRepo.list() : []
   const lineItems = canSeeFinancials
     ? await new TripLineItemRepository(db, user.tenantId).listForTrip(trip.id)
     : []
@@ -122,6 +142,43 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
               </tr>
             </tbody>
           </table>
+
+          {canManage && (
+            <>
+              <h2 style={{ marginTop: '1.25rem' }}>編輯行程</h2>
+              <form action={updateTripAction} className="inline-form">
+                <input type="hidden" name="tripId" value={trip.id} />
+                <div className="field">
+                  <label>客戶</label>
+                  <select name="clientId" required defaultValue={trip.clientId}>
+                    {activeClients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>司機</label>
+                  <select name="driverId" required defaultValue={trip.driverId}>
+                    {activeDrivers.map((d) => (
+                      <option key={d.id} value={d.id} disabled={!d.defaultVehicleId}>
+                        {d.name}
+                        {!d.defaultVehicleId && '（尚未綁定車輛）'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>人數</label>
+                  <input name="passengerCount" type="number" min="1" defaultValue={trip.passengerCount} required />
+                </div>
+                <button className="btn" type="submit">
+                  儲存
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
         {canSeeFinancials && (

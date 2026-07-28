@@ -60,6 +60,32 @@ export class TripRepository {
     return trip
   }
 
+  async update(
+    tripId: string,
+    input: { clientId: string; passengerCount: number; driverId: string }
+  ): Promise<Trip> {
+    const trip = await this.findById(tripId)
+    if (!trip) throw new Error(`Trip ${tripId} not found in tenant ${this.tenantId}`)
+
+    const driver = await this.db.driver.findUnique({ where: { id: input.driverId } })
+    if (!driver || driver.tenantId !== this.tenantId) {
+      throw new Error(`Driver ${input.driverId} not found in tenant ${this.tenantId}`)
+    }
+    if (!driver.defaultVehicleId) {
+      throw new Error(`Driver ${input.driverId} has no default vehicle bound`)
+    }
+
+    return this.db.trip.update({
+      where: { id: tripId },
+      data: {
+        clientId: input.clientId,
+        passengerCount: input.passengerCount,
+        driverId: input.driverId,
+        vehicleId: driver.defaultVehicleId,
+      },
+    })
+  }
+
   async transitionStatus(tripId: string, nextStatus: TripStatus): Promise<Trip> {
     const trip = await this.findById(tripId)
     if (!trip) throw new Error(`Trip ${tripId} not found in tenant ${this.tenantId}`)

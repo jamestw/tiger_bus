@@ -3,7 +3,7 @@ import { testDb, resetTestDb } from '../../support/test-db'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { VehicleRepository } from '@/lib/repositories/vehicle-repository'
 import { ClientRepository } from '@/lib/repositories/client-repository'
-import { createTrip, listTripsInRange } from '@/app/api/trips/handlers'
+import { createTrip, updateTrip, listTripsInRange } from '@/app/api/trips/handlers'
 
 async function seedTenantWithDriverAndVehicle(tenantId: string) {
   const vehicle = await new VehicleRepository(testDb, tenantId).create({
@@ -43,6 +43,66 @@ describe('trips API handlers', () => {
 
     expect(trips).toHaveLength(1)
     expect(trips[0].routeDescription).toBe('台北一日')
+  })
+
+  it('updates a trip (client, passenger count, driver) as TENANT_ADMIN', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver: driverA } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const vehicleB = await new VehicleRepository(testDb, tenant.id).create({
+      type: '中巴', plateNumber: 'BBB-002', capacity: 20,
+    })
+    const driverB = await new DriverRepository(testDb, tenant.id).create({ name: '生哥' })
+    await new DriverRepository(testDb, tenant.id).setDefaultVehicle(driverB.id, vehicleB.id)
+    const clientA = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const clientB = await new ClientRepository(testDb, tenant.id).create({ name: '雄獅旅遊' })
+    const adminUser = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'admin@test.com', passwordHash: 'x',
+        name: '車行管理者', role: 'TENANT_ADMIN',
+      },
+    })
+    const adminSession = { id: adminUser.id, role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+
+    const trip = await createTrip(testDb, adminSession, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: clientA.id, driverId: driverA.id,
+    })
+
+    const updated = await updateTrip(testDb, adminSession, trip.id, {
+      clientId: clientB.id, passengerCount: 22, driverId: driverB.id,
+    })
+
+    expect(updated.clientId).toBe(clientB.id)
+    expect(updated.passengerCount).toBe(22)
+    expect(updated.driverId).toBe(driverB.id)
+    expect(updated.vehicleId).toBe(vehicleB.id)
+  })
+
+  it('rejects trip update from an ACCOUNTANT-role session', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const adminUser = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'admin2@test.com', passwordHash: 'x',
+        name: '車行管理者', role: 'TENANT_ADMIN',
+      },
+    })
+    const adminSession = { id: adminUser.id, role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+    const accountantSession = { id: 'u2', role: 'ACCOUNTANT' as const, tenantId: tenant.id }
+
+    const trip = await createTrip(testDb, adminSession, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, driverId: driver.id,
+    })
+
+    await expect(
+      updateTrip(testDb, accountantSession, trip.id, {
+        clientId: client.id, passengerCount: 99, driverId: driver.id,
+      })
+    ).rejects.toThrow()
   })
 
   it('rejects trip creation from an ACCOUNTANT-role session', async () => {

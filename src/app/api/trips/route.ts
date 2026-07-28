@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { createTrip, listTripsInRange } from './handlers'
+import { createTrip, updateTrip, listTripsInRange } from './handlers'
 
 export async function GET(request: Request) {
   const session = await auth()
@@ -26,4 +26,17 @@ export async function POST(request: Request) {
     endDate: new Date(body.endDate),
   })
   return NextResponse.json(trip, { status: 201 })
+}
+
+export async function PATCH(request: Request) {
+  const session = await auth()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json()
+  const trip = await updateTrip(db, session.user, body.tripId, {
+    clientId: body.clientId,
+    passengerCount: body.passengerCount,
+    driverId: body.driverId,
+  })
+  return NextResponse.json(trip)
 }

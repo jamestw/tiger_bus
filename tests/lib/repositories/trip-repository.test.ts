@@ -116,6 +116,63 @@ describe('TripRepository', () => {
     expect(updated.status).toBe('CONFIRMED')
   })
 
+  it('updates client, passenger count, and driver (re-attaching the new default vehicle)', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver: driverA, vehicle: vehicleA } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const vehicleB = await new VehicleRepository(testDb, tenant.id).create({
+      type: '中巴', plateNumber: 'BBB-002', capacity: 20,
+    })
+    const driverB = await new DriverRepository(testDb, tenant.id).create({ name: '生哥' })
+    await new DriverRepository(testDb, tenant.id).setDefaultVehicle(driverB.id, vehicleB.id)
+    const clientA = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const clientB = await new ClientRepository(testDb, tenant.id).create({ name: '雄獅旅遊' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: clientA.id, bookedById: booker.id, driverId: driverA.id,
+    })
+    expect(trip.vehicleId).toBe(vehicleA.id)
+
+    const updated = await repo.update(trip.id, {
+      clientId: clientB.id, passengerCount: 18, driverId: driverB.id,
+    })
+
+    expect(updated.clientId).toBe(clientB.id)
+    expect(updated.passengerCount).toBe(18)
+    expect(updated.driverId).toBe(driverB.id)
+    expect(updated.vehicleId).toBe(vehicleB.id)
+  })
+
+  it('rejects updating a trip to a driver with no default vehicle bound', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver: driverA } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const driverNoVehicle = await new DriverRepository(testDb, tenant.id).create({ name: '無車司機' })
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, bookedById: booker.id, driverId: driverA.id,
+    })
+
+    await expect(
+      repo.update(trip.id, { clientId: client.id, passengerCount: 10, driverId: driverNoVehicle.id })
+    ).rejects.toThrow(/default vehicle/)
+  })
+
   it('rejects an illegal status transition from COMPLETED to PENDING', async () => {
     const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
     const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)

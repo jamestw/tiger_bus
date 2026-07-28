@@ -22,6 +22,16 @@ export async function createTrip(
   })
 }
 
+export async function updateTrip(
+  db: PrismaClient,
+  session: SessionUser,
+  tripId: string,
+  input: { clientId: string; passengerCount: number; driverId: string }
+) {
+  requireRole(session, ['TENANT_ADMIN', 'DISPATCHER'])
+  return new TripRepository(db, session.tenantId!).update(tripId, input)
+}
+
 export async function listTripsInRange(
   db: PrismaClient,
   session: SessionUser,
