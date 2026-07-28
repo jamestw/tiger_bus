@@ -1,7 +1,8 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { listVehicles, createVehicle } from '@/app/api/vehicles/handlers'
+import { listVehicles, createVehicle, updateVehicle, deleteVehicle } from '@/app/api/vehicles/handlers'
+import { VehicleRow } from './vehicle-row'
 
 async function createVehicleAction(formData: FormData) {
   'use server'
@@ -14,6 +15,28 @@ async function createVehicleAction(formData: FormData) {
     capacity: Number(formData.get('capacity')),
     lastInspectionDate: lastInspectionDate ? new Date(lastInspectionDate) : undefined,
   })
+  revalidatePath('/vehicles')
+}
+
+async function updateVehicleAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  const lastInspectionDate = formData.get('lastInspectionDate') as string
+  await updateVehicle(db, session.user, formData.get('vehicleId') as string, {
+    type: formData.get('type') as string,
+    plateNumber: formData.get('plateNumber') as string,
+    capacity: Number(formData.get('capacity')),
+    lastInspectionDate: lastInspectionDate ? new Date(lastInspectionDate) : undefined,
+  })
+  revalidatePath('/vehicles')
+}
+
+async function deleteVehicleAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await deleteVehicle(db, session.user, formData.get('vehicleId') as string)
   revalidatePath('/vehicles')
 }
 
@@ -41,16 +64,18 @@ export default async function VehiclesPage() {
                 <th>種類</th>
                 <th>乘客數</th>
                 <th>最後檢驗日期</th>
+                {canManage && <th>操作</th>}
               </tr>
             </thead>
             <tbody>
               {vehicles.map((v) => (
-                <tr key={v.id}>
-                  <td>{v.plateNumber}</td>
-                  <td>{v.type}</td>
-                  <td>{v.capacity}</td>
-                  <td>{v.lastInspectionDate ? new Date(v.lastInspectionDate).toLocaleDateString('zh-TW') : '—'}</td>
-                </tr>
+                <VehicleRow
+                  key={v.id}
+                  vehicle={v}
+                  canManage={canManage}
+                  updateAction={updateVehicleAction}
+                  deleteAction={deleteVehicleAction}
+                />
               ))}
             </tbody>
           </table>

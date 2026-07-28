@@ -1,7 +1,8 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { listClients, createClient } from '@/app/api/clients/handlers'
+import { listClients, createClient, updateClient, deleteClient } from '@/app/api/clients/handlers'
+import { ClientRow } from './client-row'
 
 async function createClientAction(formData: FormData) {
   'use server'
@@ -11,6 +12,25 @@ async function createClientAction(formData: FormData) {
     name: formData.get('name') as string,
     phone: (formData.get('phone') as string) || undefined,
   })
+  revalidatePath('/clients')
+}
+
+async function updateClientAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await updateClient(db, session.user, formData.get('clientId') as string, {
+    name: formData.get('name') as string,
+    phone: (formData.get('phone') as string) || undefined,
+  })
+  revalidatePath('/clients')
+}
+
+async function deleteClientAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await deleteClient(db, session.user, formData.get('clientId') as string)
   revalidatePath('/clients')
 }
 
@@ -36,14 +56,18 @@ export default async function ClientsPage() {
               <tr>
                 <th>名稱</th>
                 <th>聯絡電話</th>
+                {canManage && <th>操作</th>}
               </tr>
             </thead>
             <tbody>
               {clients.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>{c.phone ?? '—'}</td>
-                </tr>
+                <ClientRow
+                  key={c.id}
+                  client={c}
+                  canManage={canManage}
+                  updateAction={updateClientAction}
+                  deleteAction={deleteClientAction}
+                />
               ))}
             </tbody>
           </table>

@@ -1,9 +1,10 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { listDrivers, createDriver } from '@/app/api/drivers/handlers'
+import { listDrivers, createDriver, updateDriver, deleteDriver } from '@/app/api/drivers/handlers'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { VehicleRepository } from '@/lib/repositories/vehicle-repository'
+import { DriverRow } from './driver-row'
 
 async function createDriverAction(formData: FormData) {
   'use server'
@@ -13,6 +14,25 @@ async function createDriverAction(formData: FormData) {
     name: formData.get('name') as string,
     phone: (formData.get('phone') as string) || undefined,
   })
+  revalidatePath('/drivers')
+}
+
+async function updateDriverAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await updateDriver(db, session.user, formData.get('driverId') as string, {
+    name: formData.get('name') as string,
+    phone: (formData.get('phone') as string) || undefined,
+  })
+  revalidatePath('/drivers')
+}
+
+async function deleteDriverAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await deleteDriver(db, session.user, formData.get('driverId') as string)
   revalidatePath('/drivers')
 }
 
@@ -35,7 +55,6 @@ export default async function DriversPage() {
 
   const drivers = await listDrivers(db, user)
   const vehicles = await new VehicleRepository(db, user.tenantId).list()
-  const vehicleById = new Map(vehicles.map((v) => [v.id, v]))
 
   return (
     <div>
@@ -52,40 +71,20 @@ export default async function DriversPage() {
                 <th>姓名</th>
                 <th>電話</th>
                 <th>預設車輛</th>
-                {canManage && <th>變更預設車輛</th>}
+                {canManage && <th>操作</th>}
               </tr>
             </thead>
             <tbody>
               {drivers.map((d) => (
-                <tr key={d.id}>
-                  <td>{d.name}</td>
-                  <td>{d.phone ?? '—'}</td>
-                  <td>
-                    {d.defaultVehicleId
-                      ? `${vehicleById.get(d.defaultVehicleId)?.plateNumber ?? '—'}（${vehicleById.get(d.defaultVehicleId)?.type ?? ''}）`
-                      : '未綁定'}
-                  </td>
-                  {canManage && (
-                    <td>
-                      <form action={setDefaultVehicleAction} className="row-form">
-                        <input type="hidden" name="driverId" value={d.id} />
-                        <select name="vehicleId" required defaultValue="">
-                          <option value="" disabled>
-                            選擇車輛
-                          </option>
-                          {vehicles.map((v) => (
-                            <option key={v.id} value={v.id}>
-                              {v.plateNumber}（{v.type}）
-                            </option>
-                          ))}
-                        </select>
-                        <button className="btn" type="submit">
-                          套用
-                        </button>
-                      </form>
-                    </td>
-                  )}
-                </tr>
+                <DriverRow
+                  key={d.id}
+                  driver={d}
+                  vehicles={vehicles}
+                  canManage={canManage}
+                  updateAction={updateDriverAction}
+                  deleteAction={deleteDriverAction}
+                  setDefaultVehicleAction={setDefaultVehicleAction}
+                />
               ))}
             </tbody>
           </table>

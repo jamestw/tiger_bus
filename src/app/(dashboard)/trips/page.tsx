@@ -37,10 +37,14 @@ export default async function TripsPage() {
   rangeEnd.setDate(0)
 
   const trips = await listTripsInRange(db, user, rangeStart, rangeEnd)
-  const clients = await new ClientRepository(db, user.tenantId).list()
-  const drivers = await new DriverRepository(db, user.tenantId).list()
-  const clientById = new Map(clients.map((c) => [c.id, c]))
-  const driverById = new Map(drivers.map((d) => [d.id, d]))
+  const clientRepo = new ClientRepository(db, user.tenantId)
+  const driverRepo = new DriverRepository(db, user.tenantId)
+  const clients = await clientRepo.list()
+  const drivers = await driverRepo.list()
+  // Historical trips may reference a since-deleted client/driver — look those
+  // names up from listAll() so past records don't lose their label.
+  const clientById = new Map((await clientRepo.listAll()).map((c) => [c.id, c]))
+  const driverById = new Map((await driverRepo.listAll()).map((d) => [d.id, d]))
 
   const lineItemRepo = new TripLineItemRepository(db, user.tenantId)
   const lineItemsByTrip = new Map(
