@@ -1,4 +1,5 @@
 import { signIn } from '@/lib/auth'
+import { db } from '@/lib/db'
 
 export default function LoginPage() {
   return (
@@ -7,11 +8,13 @@ export default function LoginPage() {
         className="login-form"
         action={async (formData) => {
           'use server'
-          await signIn('credentials', {
-            email: formData.get('email'),
-            password: formData.get('password'),
-            redirectTo: '/calendar',
-          })
+          const email = formData.get('email') as string
+          const password = formData.get('password')
+
+          const user = await db.user.findUnique({ where: { email } })
+          const redirectTo = user?.role === 'SUPERADMIN' ? '/tenants' : '/calendar'
+
+          await signIn('credentials', { email, password, redirectTo })
         }}
       >
         <div className="login-form__kicker">Tiger Bus 調度管理系統</div>
