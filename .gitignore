@@ -38,3 +38,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma init scaffolding we don't use (classic prisma-client-js generator instead)
+/.claude/skills
+/.windsurf/skills
+/.agents/skills
+/skills-lock.json
