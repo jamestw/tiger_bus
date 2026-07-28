@@ -15,3 +15,18 @@ export async function createDriver(
   requireRole(session, ['TENANT_ADMIN'])
   return new DriverRepository(db, session.tenantId!).create(input)
 }
+
+export async function updateDriver(
+  db: PrismaClient,
+  session: SessionUser,
+  driverId: string,
+  input: { name: string; phone?: string }
+) {
+  requireRole(session, ['TENANT_ADMIN'])
+  return new DriverRepository(db, session.tenantId!).update(driverId, input)
+}
+
+export async function deleteDriver(db: PrismaClient, session: SessionUser, driverId: string) {
+  requireRole(session, ['TENANT_ADMIN'])
+  return new DriverRepository(db, session.tenantId!).softDelete(driverId)
+}

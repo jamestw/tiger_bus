@@ -15,3 +15,18 @@ export async function createClient(
   requireRole(session, ['TENANT_ADMIN', 'DISPATCHER'])
   return new ClientRepository(db, session.tenantId!).create(input)
 }
+
+export async function updateClient(
+  db: PrismaClient,
+  session: SessionUser,
+  clientId: string,
+  input: { name: string; phone?: string }
+) {
+  requireRole(session, ['TENANT_ADMIN', 'DISPATCHER'])
+  return new ClientRepository(db, session.tenantId!).update(clientId, input)
+}
+
+export async function deleteClient(db: PrismaClient, session: SessionUser, clientId: string) {
+  requireRole(session, ['TENANT_ADMIN', 'DISPATCHER'])
+  return new ClientRepository(db, session.tenantId!).softDelete(clientId)
+}

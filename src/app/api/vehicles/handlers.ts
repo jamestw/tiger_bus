@@ -15,3 +15,18 @@ export async function createVehicle(
   requireRole(session, ['TENANT_ADMIN'])
   return new VehicleRepository(db, session.tenantId!).create(input)
 }
+
+export async function updateVehicle(
+  db: PrismaClient,
+  session: SessionUser,
+  vehicleId: string,
+  input: { type: string; plateNumber: string; capacity: number; lastInspectionDate?: Date }
+) {
+  requireRole(session, ['TENANT_ADMIN'])
+  return new VehicleRepository(db, session.tenantId!).update(vehicleId, input)
+}
+
+export async function deleteVehicle(db: PrismaClient, session: SessionUser, vehicleId: string) {
+  requireRole(session, ['TENANT_ADMIN'])
+  return new VehicleRepository(db, session.tenantId!).softDelete(vehicleId)
+}
