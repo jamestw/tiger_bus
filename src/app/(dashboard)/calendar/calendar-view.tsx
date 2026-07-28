@@ -58,7 +58,7 @@ function DriverColumnTable({
   const view = buildDriverColumnView(trips, range)
 
   if (view.drivers.length === 0) {
-    return <div className="empty-state">本月還沒有任何行程</div>
+    return <div className="empty-state">這段期間還沒有任何行程</div>
   }
 
   return (
