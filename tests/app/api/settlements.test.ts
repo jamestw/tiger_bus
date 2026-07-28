@@ -6,7 +6,7 @@ import { VehicleFixedCostRepository } from '@/lib/repositories/vehicle-fixed-cos
 import { ClientRepository } from '@/lib/repositories/client-repository'
 import { TripRepository } from '@/lib/repositories/trip-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
-import { generateSettlement, markSettlementPaid } from '@/app/api/settlements/handlers'
+import { generateSettlement, markSettlementPaid, deleteSettlement } from '@/app/api/settlements/handlers'
 
 async function seedCompletedTripWithLineItems(tenantId: string) {
   const vehicle = await new VehicleRepository(testDb, tenantId).create({
@@ -78,5 +78,43 @@ describe('settlements API handlers', () => {
     const paid = await markSettlementPaid(testDb, session, settlement.id)
 
     expect(paid.status).toBe('PAID')
+  })
+
+  it('deletes a GENERATED settlement as TENANT_ADMIN', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedCompletedTripWithLineItems(tenant.id)
+    const session = { id: 'u1', role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+    const settlement = await generateSettlement(testDb, session, {
+      driverId: driver.id, month: '2026-07',
+    })
+
+    await deleteSettlement(testDb, session, settlement.id)
+
+    const remaining = await testDb.settlementRecord.findUnique({ where: { id: settlement.id } })
+    expect(remaining).toBeNull()
+  })
+
+  it('rejects deleting a settlement from a DISPATCHER-role session', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedCompletedTripWithLineItems(tenant.id)
+    const adminSession = { id: 'u1', role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+    const settlement = await generateSettlement(testDb, adminSession, {
+      driverId: driver.id, month: '2026-07',
+    })
+    const dispatcherSession = { id: 'u2', role: 'DISPATCHER' as const, tenantId: tenant.id }
+
+    await expect(deleteSettlement(testDb, dispatcherSession, settlement.id)).rejects.toThrow()
+  })
+
+  it('rejects deleting a settlement that has been marked paid', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedCompletedTripWithLineItems(tenant.id)
+    const session = { id: 'u1', role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+    const settlement = await generateSettlement(testDb, session, {
+      driverId: driver.id, month: '2026-07',
+    })
+    await markSettlementPaid(testDb, session, settlement.id)
+
+    await expect(deleteSettlement(testDb, session, settlement.id)).rejects.toThrow()
   })
 })

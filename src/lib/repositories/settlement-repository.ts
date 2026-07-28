@@ -53,4 +53,16 @@ export class SettlementRepository {
       data: { status: 'PAID', paidAt: new Date() },
     })
   }
+
+  async delete(settlementId: string): Promise<void> {
+    const settlement = await this.db.settlementRecord.findUnique({ where: { id: settlementId } })
+    if (!settlement || settlement.tenantId !== this.tenantId) {
+      throw new Error(`Settlement ${settlementId} not found in tenant ${this.tenantId}`)
+    }
+    if (settlement.status === 'PAID') {
+      throw new Error('已標記為 PAID 的結算單不能刪除，請先確認付款狀態 (cannot delete a PAID settlement)')
+    }
+
+    await this.db.settlementRecord.delete({ where: { id: settlementId } })
+  }
 }

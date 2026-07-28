@@ -1,8 +1,9 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { generateSettlement, markSettlementPaid } from '@/app/api/settlements/handlers'
+import { generateSettlement, markSettlementPaid, deleteSettlement } from '@/app/api/settlements/handlers'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
+import { DeleteSettlementButton } from './delete-settlement-button'
 
 async function generateSettlementAction(formData: FormData) {
   'use server'
@@ -22,6 +23,15 @@ async function markPaidAction(formData: FormData) {
   if (!session?.user) return
   await markSettlementPaid(db, session.user, formData.get('settlementId') as string)
   revalidatePath('/settlements')
+}
+
+async function deleteSettlementAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await deleteSettlement(db, session.user, formData.get('settlementId') as string)
+  revalidatePath('/settlements')
+  revalidatePath('/overview')
 }
 
 export default async function SettlementsPage() {
@@ -96,12 +106,20 @@ export default async function SettlementsPage() {
                   {canManage && (
                     <td>
                       {s.status === 'GENERATED' && (
-                        <form action={markPaidAction}>
-                          <input type="hidden" name="settlementId" value={s.id} />
-                          <button className="btn" type="submit">
-                            標記已付款
-                          </button>
-                        </form>
+                        <div className="row-form">
+                          <form action={markPaidAction}>
+                            <input type="hidden" name="settlementId" value={s.id} />
+                            <button className="btn" type="submit">
+                              標記已付款
+                            </button>
+                          </form>
+                          <DeleteSettlementButton
+                            settlementId={s.id}
+                            driverName={s.driver.name}
+                            month={s.month}
+                            deleteAction={deleteSettlementAction}
+                          />
+                        </div>
                       )}
                     </td>
                   )}

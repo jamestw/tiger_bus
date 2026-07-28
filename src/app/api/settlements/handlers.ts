@@ -67,6 +67,11 @@ export async function markSettlementPaid(db: PrismaClient, session: SessionUser,
   return new SettlementRepository(db, session.tenantId!).markPaid(settlementId)
 }
 
+export async function deleteSettlement(db: PrismaClient, session: SessionUser, settlementId: string) {
+  requireRole(session, ['TENANT_ADMIN', 'ACCOUNTANT'])
+  return new SettlementRepository(db, session.tenantId!).delete(settlementId)
+}
+
 export async function listSettlementsForDriver(
   db: PrismaClient,
   session: SessionUser,
