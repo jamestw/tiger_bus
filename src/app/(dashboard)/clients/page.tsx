@@ -46,6 +46,25 @@ export default async function ClientsPage() {
     <div>
       <h1>客戶管理</h1>
 
+      {canManage && (
+        <div className="app-section">
+          <h2>新增客戶</h2>
+          <form action={createClientAction} className="inline-form">
+            <div className="field">
+              <label>名稱</label>
+              <input name="name" required />
+            </div>
+            <div className="field">
+              <label>聯絡電話</label>
+              <input name="phone" />
+            </div>
+            <button className="btn" type="submit">
+              新增客戶
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="app-section">
         <h2>客戶清單</h2>
         {clients.length === 0 ? (
@@ -73,25 +92,6 @@ export default async function ClientsPage() {
           </table>
         )}
       </div>
-
-      {canManage && (
-        <div className="app-section">
-          <h2>新增客戶</h2>
-          <form action={createClientAction} className="inline-form">
-            <div className="field">
-              <label>名稱</label>
-              <input name="name" required />
-            </div>
-            <div className="field">
-              <label>聯絡電話</label>
-              <input name="phone" />
-            </div>
-            <button className="btn" type="submit">
-              新增客戶
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   )
 }

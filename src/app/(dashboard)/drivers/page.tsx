@@ -60,6 +60,25 @@ export default async function DriversPage() {
     <div>
       <h1>司機管理</h1>
 
+      {canManage && (
+        <div className="app-section">
+          <h2>新增司機</h2>
+          <form action={createDriverAction} className="inline-form">
+            <div className="field">
+              <label>姓名</label>
+              <input name="name" required />
+            </div>
+            <div className="field">
+              <label>電話</label>
+              <input name="phone" />
+            </div>
+            <button className="btn" type="submit">
+              新增司機
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="app-section">
         <h2>司機清單</h2>
         {drivers.length === 0 ? (
@@ -90,25 +109,6 @@ export default async function DriversPage() {
           </table>
         )}
       </div>
-
-      {canManage && (
-        <div className="app-section">
-          <h2>新增司機</h2>
-          <form action={createDriverAction} className="inline-form">
-            <div className="field">
-              <label>姓名</label>
-              <input name="name" required />
-            </div>
-            <div className="field">
-              <label>電話</label>
-              <input name="phone" />
-            </div>
-            <button className="btn" type="submit">
-              新增司機
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   )
 }

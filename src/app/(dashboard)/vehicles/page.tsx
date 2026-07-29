@@ -52,6 +52,33 @@ export default async function VehiclesPage() {
     <div>
       <h1>車輛管理</h1>
 
+      {canManage && (
+        <div className="app-section">
+          <h2>新增車輛</h2>
+          <form action={createVehicleAction} className="inline-form">
+            <div className="field">
+              <label>種類</label>
+              <input name="type" placeholder="大巴 / 中巴" required />
+            </div>
+            <div className="field">
+              <label>車號</label>
+              <input name="plateNumber" required />
+            </div>
+            <div className="field">
+              <label>乘客數</label>
+              <input name="capacity" type="number" min="1" required />
+            </div>
+            <div className="field">
+              <label>最後檢驗日期</label>
+              <input name="lastInspectionDate" type="date" />
+            </div>
+            <button className="btn" type="submit">
+              新增車輛
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="app-section">
         <h2>車輛清單</h2>
         {vehicles.length === 0 ? (
@@ -81,33 +108,6 @@ export default async function VehiclesPage() {
           </table>
         )}
       </div>
-
-      {canManage && (
-        <div className="app-section">
-          <h2>新增車輛</h2>
-          <form action={createVehicleAction} className="inline-form">
-            <div className="field">
-              <label>種類</label>
-              <input name="type" placeholder="大巴 / 中巴" required />
-            </div>
-            <div className="field">
-              <label>車號</label>
-              <input name="plateNumber" required />
-            </div>
-            <div className="field">
-              <label>乘客數</label>
-              <input name="capacity" type="number" min="1" required />
-            </div>
-            <div className="field">
-              <label>最後檢驗日期</label>
-              <input name="lastInspectionDate" type="date" />
-            </div>
-            <button className="btn" type="submit">
-              新增車輛
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   )
 }
