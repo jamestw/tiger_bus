@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tigerbus_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - tigerbus_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - tigerbus_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tigerbus_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - tigerbus_pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "127.0.0.1:5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - tigerbus_network
+
+  web:
+    build:
+      context: .
+    container_name: tigerbus_web
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    depends_on:
+      - postgres
+    ports:
+      - "127.0.0.1:3300:3000"
+    networks:
+      - tigerbus_network
+
+volumes:
+  tigerbus_postgres_data:
+    name: tigerbus_postgres_data
+  tigerbus_pgadmin_data:
+    name: tigerbus_pgadmin_data
+
+networks:
+  tigerbus_network:
+    name: tigerbus_network
