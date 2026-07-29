@@ -416,6 +416,11 @@ table {
   color: #97540f;
 }
 
+.pill--suspended {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .row-form {
   display: flex;
   gap: 0.5rem;

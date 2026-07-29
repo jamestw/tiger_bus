@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { testDb, resetTestDb } from '../support/test-db'
-import { listAllTenantsSettlements, listTenants, createTenantWithAdmin } from '@/lib/platform-queries'
+import {
+  listAllTenantsSettlements,
+  listTenants,
+  listTenantsWithAdmin,
+  createTenantWithAdmin,
+  updateTenantAndAdmin,
+  setTenantStatus,
+} from '@/lib/platform-queries'
 
 describe('platform-queries', () => {
   beforeEach(resetTestDb)
@@ -90,5 +97,86 @@ describe('listTenants', () => {
     const tenants = await listTenants(testDb)
 
     expect(tenants).toHaveLength(2)
+  })
+
+  it('defaults new tenants to ACTIVE status', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+
+    const [found] = await listTenants(testDb)
+
+    expect(found.status).toBe('ACTIVE')
+    expect(found.id).toBe(tenant.id)
+  })
+})
+
+describe('listTenantsWithAdmin', () => {
+  beforeEach(resetTestDb)
+  afterAll(async () => testDb.$disconnect())
+
+  it("includes each tenant's first TENANT_ADMIN name", async () => {
+    const { tenant } = await createTenantWithAdmin(testDb, {
+      tenantName: '新測試車行', adminName: '車行負責人',
+      adminEmail: 'owner@new-fleet.dev', adminPassword: 'password123',
+    })
+
+    const tenants = await listTenantsWithAdmin(testDb)
+
+    expect(tenants).toHaveLength(1)
+    expect(tenants[0].id).toBe(tenant.id)
+    expect(tenants[0].adminName).toBe('車行負責人')
+  })
+
+  it('reports null adminName when a tenant has no TENANT_ADMIN user', async () => {
+    await testDb.tenant.create({ data: { name: '沒有管理者的車行' } })
+
+    const tenants = await listTenantsWithAdmin(testDb)
+
+    expect(tenants[0].adminName).toBeNull()
+  })
+})
+
+describe('updateTenantAndAdmin', () => {
+  beforeEach(resetTestDb)
+  afterAll(async () => testDb.$disconnect())
+
+  it("updates the tenant name and the first admin's name", async () => {
+    const { tenant, adminUser } = await createTenantWithAdmin(testDb, {
+      tenantName: '新測試車行', adminName: '車行負責人',
+      adminEmail: 'owner@new-fleet.dev', adminPassword: 'password123',
+    })
+
+    const result = await updateTenantAndAdmin(testDb, {
+      tenantId: tenant.id, tenantName: '改名車行', adminName: '新負責人',
+    })
+
+    expect(result.tenant.name).toBe('改名車行')
+    expect(result.adminUser?.id).toBe(adminUser.id)
+    expect(result.adminUser?.name).toBe('新負責人')
+  })
+
+  it('updates just the tenant name when there is no admin user to rename', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: '沒有管理者的車行' } })
+
+    const result = await updateTenantAndAdmin(testDb, {
+      tenantId: tenant.id, tenantName: '改名車行', adminName: '任何名字',
+    })
+
+    expect(result.tenant.name).toBe('改名車行')
+    expect(result.adminUser).toBeNull()
+  })
+})
+
+describe('setTenantStatus', () => {
+  beforeEach(resetTestDb)
+  afterAll(async () => testDb.$disconnect())
+
+  it('suspends and reactivates a tenant', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+
+    const suspended = await setTenantStatus(testDb, tenant.id, 'SUSPENDED')
+    expect(suspended.status).toBe('SUSPENDED')
+
+    const reactivated = await setTenantStatus(testDb, tenant.id, 'ACTIVE')
+    expect(reactivated.status).toBe('ACTIVE')
   })
 })

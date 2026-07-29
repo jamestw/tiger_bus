@@ -16,11 +16,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials?.password as string | undefined
         if (!email || !password) return null
 
-        const user = await db.user.findUnique({ where: { email } })
+        const user = await db.user.findUnique({ where: { email }, include: { tenant: true } })
         if (!user) return null
 
         const valid = await verifyPassword(password, user.passwordHash)
         if (!valid) return null
+
+        // A suspended tenant's users can't log in at all — their existing
+        // sessions still work until the JWT expires, but that's acceptable
+        // for a first cut (no session-revocation mechanism yet).
+        if (user.tenant?.status === 'SUSPENDED') return null
 
         return {
           id: user.id,

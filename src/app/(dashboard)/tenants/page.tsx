@@ -1,7 +1,14 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { listTenantsHandler, createTenantHandler } from '@/app/api/tenants/handlers'
+import {
+  listTenantsHandler,
+  createTenantHandler,
+  updateTenantHandler,
+  setTenantStatusHandler,
+} from '@/app/api/tenants/handlers'
+import { TenantRow } from './tenant-row'
+import type { TenantStatus } from '@prisma/client'
 
 async function createTenantAction(formData: FormData) {
   'use server'
@@ -12,6 +19,29 @@ async function createTenantAction(formData: FormData) {
     adminName: formData.get('adminName') as string,
     adminEmail: formData.get('adminEmail') as string,
     adminPassword: formData.get('adminPassword') as string,
+  })
+  revalidatePath('/tenants')
+}
+
+async function updateTenantAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await updateTenantHandler(db, session.user, {
+    tenantId: formData.get('tenantId') as string,
+    tenantName: formData.get('tenantName') as string,
+    adminName: formData.get('adminName') as string,
+  })
+  revalidatePath('/tenants')
+}
+
+async function setTenantStatusAction(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) return
+  await setTenantStatusHandler(db, session.user, {
+    tenantId: formData.get('tenantId') as string,
+    status: formData.get('status') as TenantStatus,
   })
   revalidatePath('/tenants')
 }
@@ -43,15 +73,20 @@ export default async function TenantsPage() {
             <thead>
               <tr>
                 <th>車行名稱</th>
+                <th>管理者姓名</th>
+                <th>狀態</th>
                 <th>建立日期</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
               {tenants.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.name}</td>
-                  <td>{t.createdAt.toLocaleDateString('zh-TW')}</td>
-                </tr>
+                <TenantRow
+                  key={t.id}
+                  tenant={t}
+                  updateAction={updateTenantAction}
+                  setStatusAction={setTenantStatusAction}
+                />
               ))}
             </tbody>
           </table>

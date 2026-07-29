@@ -36,12 +36,18 @@ enum CalendarViewMode {
   WEEK
 }
 
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Tenant {
   id                  String           @id @default(cuid())
   name                String
   contactName         String?
   contactPhone        String?
   defaultCalendarView CalendarViewMode @default(MONTH)
+  status              TenantStatus     @default(ACTIVE)
   createdAt           DateTime         @default(now())
 
   users             User[]
