@@ -21,9 +21,30 @@ export function ClientCombobox({
   const [open, setOpen] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [quickAddPending, setQuickAddPending] = useState(false)
+  const [showSelectionError, setShowSelectionError] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const phoneInputRef = useRef<HTMLInputElement>(null)
+
+  // A hidden input's `required` attribute is silently ignored by the browser
+  // (hidden fields are excluded from constraint validation), so typing a
+  // search query without actually clicking a result used to submit the form
+  // with clientId="" and crash on the database's foreign key constraint.
+  // Validate for real on submit instead.
+  useEffect(() => {
+    const form = containerRef.current?.closest('form')
+    if (!form) return
+    function handleSubmit(e: SubmitEvent) {
+      if (!selectedId) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setShowSelectionError(true)
+        setOpen(true)
+      }
+    }
+    form.addEventListener('submit', handleSubmit, true)
+    return () => form.removeEventListener('submit', handleSubmit, true)
+  }, [selectedId])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -47,6 +68,7 @@ export function ClientCombobox({
     setSelectedId(c.id)
     setQuery(labelFor(c))
     setOpen(false)
+    setShowSelectionError(false)
   }
 
   function openQuickAdd() {
@@ -76,16 +98,18 @@ export function ClientCombobox({
   return (
     <div className="field client-combobox" ref={containerRef}>
       <label>客戶</label>
-      <input type="hidden" name="clientId" value={selectedId} required />
+      <input type="hidden" name="clientId" value={selectedId} />
       <div className="client-combobox__row">
         <input
           type="text"
           placeholder="搜尋客戶（名稱或電話）"
           value={query}
+          className={showSelectionError ? 'client-combobox__input--error' : undefined}
           onChange={(e) => {
             setQuery(e.target.value)
             setSelectedId('')
             setOpen(true)
+            setShowSelectionError(false)
           }}
           onFocus={() => setOpen(true)}
           autoComplete="off"
@@ -94,6 +118,9 @@ export function ClientCombobox({
           +
         </button>
       </div>
+      {showSelectionError && (
+        <p className="client-combobox__error">請從清單選擇一個客戶，或用「+」新增</p>
+      )}
 
       {open && (
         <ul className="client-combobox__list">

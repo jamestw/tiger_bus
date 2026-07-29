@@ -705,6 +705,16 @@ table {
   flex-shrink: 0;
 }
 
+.client-combobox__input--error {
+  border-color: var(--danger) !important;
+}
+
+.client-combobox__error {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
 .client-combobox__list {
   position: absolute;
   z-index: 20;

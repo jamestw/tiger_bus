@@ -26,6 +26,11 @@ export class TripRepository {
       throw new Error('結束日期不能早於開始日期 (endDate must not be before startDate)')
     }
 
+    const client = await this.db.client.findUnique({ where: { id: input.clientId } })
+    if (!client || client.tenantId !== this.tenantId) {
+      throw new Error(`Client ${input.clientId} not found in tenant ${this.tenantId}`)
+    }
+
     const driver = await this.db.driver.findUnique({ where: { id: input.driverId } })
     if (!driver || driver.tenantId !== this.tenantId) {
       throw new Error(`Driver ${input.driverId} not found in tenant ${this.tenantId}`)
@@ -84,6 +89,11 @@ export class TripRepository {
 
     if (input.endDate < input.startDate) {
       throw new Error('結束日期不能早於開始日期 (endDate must not be before startDate)')
+    }
+
+    const client = await this.db.client.findUnique({ where: { id: input.clientId } })
+    if (!client || client.tenantId !== this.tenantId) {
+      throw new Error(`Client ${input.clientId} not found in tenant ${this.tenantId}`)
     }
 
     const driver = await this.db.driver.findUnique({ where: { id: input.driverId } })
