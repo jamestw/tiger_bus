@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   buildDriverColumnView,
   buildMonthView,
@@ -11,10 +11,14 @@ export function CalendarView({
   trips,
   rangeStart,
   rangeEnd,
+  rangeNav,
+  modeToggle,
 }: {
   trips: CalendarTrip[]
   rangeStart: string
   rangeEnd: string
+  rangeNav: ReactNode
+  modeToggle: ReactNode
 }) {
   const [mode, setMode] = useState<'driver-column' | 'month'>('driver-column')
 
@@ -30,13 +34,19 @@ export function CalendarView({
 
   return (
     <div>
-      <div className="btn-group">
-        <button className="btn" onClick={() => setMode('driver-column')} disabled={mode === 'driver-column'}>
-          司機為欄
-        </button>
-        <button className="btn" onClick={() => setMode('month')} disabled={mode === 'month'}>
-          月曆式
-        </button>
+      <div className="calendar-toolbar">
+        <div className="calendar-toolbar__group">
+          {rangeNav}
+          {modeToggle}
+        </div>
+        <div className="btn-group">
+          <button className="btn" onClick={() => setMode('driver-column')} disabled={mode === 'driver-column'}>
+            司機為欄
+          </button>
+          <button className="btn" onClick={() => setMode('month')} disabled={mode === 'month'}>
+            月曆式
+          </button>
+        </div>
       </div>
 
       {mode === 'driver-column' ? (
