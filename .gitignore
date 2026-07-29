@@ -30,6 +30,9 @@ yarn-error.log*
 .env*.local
 .env.prod
 
+# deployment notes with production credentials — never commit
+DEPLOYMENT.md
+
 # superpowers scratch
 .superpowers/
 

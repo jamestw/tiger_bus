@@ -24,14 +24,18 @@ ssh "$VPS_ALIAS" bash << EOF
   set -e
   cd $REMOTE_DIR
 
-  echo "--- Building images..."
-  docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus build
+  echo "--- Starting postgres (if not already up)..."
+  docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus up -d postgres
+
+  echo "--- Building the full toolchain image (has the Prisma CLI, unlike the lean runtime image)..."
+  docker build --target builder -t tigerbus_toolchain:latest .
 
   echo "--- Running Prisma migrations..."
-  docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus run --rm web npx prisma migrate deploy
+  docker run --rm --network tigerbus_network --env-file .env.prod tigerbus_toolchain:latest \
+    npx prisma migrate deploy
 
-  echo "--- Starting containers..."
-  docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus up -d
+  echo "--- Building & starting the app stack..."
+  docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus up -d --build
 
   echo "--- Container status:"
   docker compose -f docker-compose.prod.yml --env-file .env.prod --project-name tigerbus ps
