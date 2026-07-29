@@ -114,11 +114,10 @@ table {
 }
 
 .app-sidebar__user {
-  padding: 0 1.25rem;
   font-size: 0.8125rem;
   line-height: 1.5;
   color: #a8a396;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .app-sidebar__user strong {
@@ -130,8 +129,27 @@ table {
 .app-sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
   padding: 0 0.75rem;
+}
+
+.app-sidebar__nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-bottom: 0.625rem;
+}
+
+.app-sidebar__nav-group:last-child {
+  margin-bottom: 0;
+}
+
+.app-sidebar__nav-group-label {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7c7869;
 }
 
 .app-sidebar nav a {
@@ -159,7 +177,7 @@ table {
 
 .app-sidebar__footer {
   margin-top: auto;
-  padding: 0.75rem;
+  padding: 1rem 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 

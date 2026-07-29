@@ -6,12 +6,12 @@ import { NavLinks } from './nav-links'
 export function SidebarShell({
   userName,
   roleLabel,
-  navItems,
+  navGroups,
   signOutAction,
 }: {
   userName: string
   roleLabel: string
-  navItems: { href: string; label: string }[]
+  navGroups: { label?: string; items: { href: string; label: string }[] }[]
   signOutAction: () => Promise<void>
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -45,14 +45,16 @@ export function SidebarShell({
             ✕
           </button>
         </div>
-        <div className="app-sidebar__user">
-          <strong>{userName}</strong>
-          {roleLabel}
+        <NavLinks groups={navGroups} />
+        <div className="app-sidebar__footer">
+          <div className="app-sidebar__user">
+            <strong>{userName}</strong>
+            {roleLabel}
+          </div>
+          <form action={signOutAction}>
+            <button type="submit">登出</button>
+          </form>
         </div>
-        <NavLinks items={navItems} />
-        <form className="app-sidebar__footer" action={signOutAction}>
-          <button type="submit">登出</button>
-        </form>
       </aside>
     </>
   )
