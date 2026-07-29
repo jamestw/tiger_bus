@@ -427,12 +427,22 @@ table {
   align-items: center;
 }
 
+.row-form input,
 .row-form select {
   padding: 0.375rem 0.5rem;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 0.8125rem;
   font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.row-form input:focus,
+.row-form select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }
 
 /* ---- Login ---- */
