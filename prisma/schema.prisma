@@ -150,6 +150,7 @@ model Trip {
   tenant           Tenant     @relation(fields: [tenantId], references: [id])
   startDate        DateTime
   endDate          DateTime
+  name             String?
   routeDescription String
   passengerCount   Int
   clientId         String

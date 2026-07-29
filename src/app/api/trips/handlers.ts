@@ -9,6 +9,7 @@ export async function createTrip(
   input: {
     startDate: Date
     endDate: Date
+    name?: string
     routeDescription: string
     passengerCount: number
     clientId: string
@@ -29,6 +30,7 @@ export async function updateTrip(
   input: {
     startDate: Date
     endDate: Date
+    name?: string
     clientId: string
     passengerCount: number
     driverId: string

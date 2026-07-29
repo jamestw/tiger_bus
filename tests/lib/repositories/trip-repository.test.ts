@@ -319,4 +319,72 @@ describe('TripRepository', () => {
 
     expect(recent).toHaveLength(2)
   })
+
+  it('creates a trip with an optional name, independent of the route description', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      name: '陳先生包車', routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+
+    expect(trip.name).toBe('陳先生包車')
+    expect(trip.routeDescription).toBe('台北一日')
+  })
+
+  it('creates a trip without a name (optional field defaults to null)', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+
+    expect(trip.name).toBeNull()
+  })
+
+  it('updates a trip\'s name', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const booker = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'dispatcher@test.com', passwordHash: 'x',
+        name: '調度員', role: 'DISPATCHER',
+      },
+    })
+    const repo = new TripRepository(testDb, tenant.id)
+    const trip = await repo.create({
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, bookedById: booker.id, driverId: driver.id,
+    })
+
+    const updated = await repo.update(trip.id, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      name: '陳先生包車', clientId: client.id, passengerCount: 10, driverId: driver.id,
+    })
+
+    expect(updated.name).toBe('陳先生包車')
+  })
 })

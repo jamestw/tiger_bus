@@ -167,4 +167,30 @@ describe('trips API handlers', () => {
     expect(trips).toHaveLength(1)
     expect(trips[0].routeDescription).toBe('志偉的行程')
   })
+
+  it('creates and updates a trip with an optional name', async () => {
+    const tenant = await testDb.tenant.create({ data: { name: 'Tiger Bus' } })
+    const { driver } = await seedTenantWithDriverAndVehicle(tenant.id)
+    const client = await new ClientRepository(testDb, tenant.id).create({ name: '長榮旅行社' })
+    const adminUser = await testDb.user.create({
+      data: {
+        tenantId: tenant.id, email: 'admin3@test.com', passwordHash: 'x',
+        name: '車行管理者', role: 'TENANT_ADMIN',
+      },
+    })
+    const adminSession = { id: adminUser.id, role: 'TENANT_ADMIN' as const, tenantId: tenant.id }
+
+    const trip = await createTrip(testDb, adminSession, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      name: '陳先生包車', routeDescription: '台北一日', passengerCount: 10,
+      clientId: client.id, driverId: driver.id,
+    })
+    expect(trip.name).toBe('陳先生包車')
+
+    const updated = await updateTrip(testDb, adminSession, trip.id, {
+      startDate: new Date('2026-07-26'), endDate: new Date('2026-07-26'),
+      name: '陳先生包車（改期）', clientId: client.id, passengerCount: 10, driverId: driver.id,
+    })
+    expect(updated.name).toBe('陳先生包車（改期）')
+  })
 })

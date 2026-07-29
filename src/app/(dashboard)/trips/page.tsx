@@ -16,6 +16,7 @@ async function createTripAction(formData: FormData) {
   await createTrip(db, session.user, {
     startDate: new Date(formData.get('startDate') as string),
     endDate: new Date((formData.get('endDate') as string) || (formData.get('startDate') as string)),
+    name: (formData.get('name') as string) || undefined,
     routeDescription: formData.get('routeDescription') as string,
     passengerCount: Number(formData.get('passengerCount')),
     clientId: formData.get('clientId') as string,
@@ -83,6 +84,10 @@ export default async function TripsPage() {
               <input name="endDate" type="date" />
             </div>
             <div className="field">
+              <label>名稱</label>
+              <input name="name" placeholder="陳先生包車" />
+            </div>
+            <div className="field">
               <label>路線</label>
               <input name="routeDescription" placeholder="台北一日" required />
             </div>
@@ -124,6 +129,7 @@ export default async function TripsPage() {
             <thead>
               <tr>
                 <th>日期</th>
+                <th>名稱</th>
                 <th>路線</th>
                 <th>客戶</th>
                 <th>司機</th>
@@ -145,6 +151,7 @@ export default async function TripsPage() {
                       {t.startDate.getTime() !== t.endDate.getTime() &&
                         ` ～ ${t.endDate.toLocaleDateString('zh-TW')}`}
                     </td>
+                    <td>{t.name ?? '—'}</td>
                     <td>{t.routeDescription}</td>
                     <td>{clientById.get(t.clientId)?.name ?? '—'}</td>
                     <td>{driverById.get(t.driverId)?.name ?? '—'}</td>

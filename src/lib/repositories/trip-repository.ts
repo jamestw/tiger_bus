@@ -15,6 +15,7 @@ export class TripRepository {
   async create(input: {
     startDate: Date
     endDate: Date
+    name?: string
     routeDescription: string
     passengerCount: number
     clientId: string
@@ -38,6 +39,7 @@ export class TripRepository {
         tenantId: this.tenantId,
         startDate: input.startDate,
         endDate: input.endDate,
+        name: input.name,
         routeDescription: input.routeDescription,
         passengerCount: input.passengerCount,
         clientId: input.clientId,
@@ -71,6 +73,7 @@ export class TripRepository {
     input: {
       startDate: Date
       endDate: Date
+      name?: string
       clientId: string
       passengerCount: number
       driverId: string
@@ -96,6 +99,7 @@ export class TripRepository {
       data: {
         startDate: input.startDate,
         endDate: input.endDate,
+        name: input.name,
         clientId: input.clientId,
         passengerCount: input.passengerCount,
         driverId: input.driverId,

@@ -23,6 +23,7 @@ async function updateTripAction(formData: FormData) {
   await updateTrip(db, session.user, tripId, {
     startDate: new Date(startDate),
     endDate: new Date((formData.get('endDate') as string) || startDate),
+    name: (formData.get('name') as string) || undefined,
     clientId: formData.get('clientId') as string,
     passengerCount: Number(formData.get('passengerCount')),
     driverId: formData.get('driverId') as string,
@@ -111,6 +112,10 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
                 </td>
               </tr>
               <tr>
+                <td>名稱</td>
+                <td>{trip.name ?? '—'}</td>
+              </tr>
+              <tr>
                 <td>客戶</td>
                 <td>{client?.name ?? '—'}</td>
               </tr>
@@ -170,6 +175,10 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
                     type="date"
                     defaultValue={trip.endDate.toISOString().slice(0, 10)}
                   />
+                </div>
+                <div className="field">
+                  <label>名稱</label>
+                  <input name="name" placeholder="陳先生包車" defaultValue={trip.name ?? ''} />
                 </div>
                 <div className="field">
                   <label>客戶</label>
