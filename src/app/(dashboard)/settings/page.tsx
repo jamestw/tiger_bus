@@ -89,10 +89,30 @@ export default async function SettingsPage() {
 
       <div className="app-section">
         <h2>常用收支項目</h2>
+
+        <form action={createPresetAction} className="inline-form">
+          <div className="field">
+            <label>項目名稱</label>
+            <input name="name" placeholder="車資 / 油資 / 過路費" required />
+          </div>
+          <div className="field">
+            <label>類型</label>
+            <select name="type" required defaultValue="REVENUE">
+              <option value="REVENUE">收入</option>
+              <option value="COST">支出</option>
+            </select>
+          </div>
+          <button className="btn" type="submit">
+            新增常用項目
+          </button>
+        </form>
+
         {presets.length === 0 ? (
-          <div className="empty-state">還沒有任何常用項目，建立後可在行程的「新增收支項目」用下拉選單快速選擇</div>
+          <div className="empty-state" style={{ marginTop: '1rem' }}>
+            還沒有任何常用項目，建立後可在行程的「新增收支項目」用下拉選單快速選擇
+          </div>
         ) : (
-          <table className="data-table">
+          <table className="data-table" style={{ marginTop: '1rem' }}>
             <thead>
               <tr>
                 <th>項目名稱</th>
@@ -118,23 +138,6 @@ export default async function SettingsPage() {
             </tbody>
           </table>
         )}
-
-        <form action={createPresetAction} className="inline-form" style={{ marginTop: '1rem' }}>
-          <div className="field">
-            <label>項目名稱</label>
-            <input name="name" placeholder="車資 / 油資 / 過路費" required />
-          </div>
-          <div className="field">
-            <label>類型</label>
-            <select name="type" required defaultValue="REVENUE">
-              <option value="REVENUE">收入</option>
-              <option value="COST">支出</option>
-            </select>
-          </div>
-          <button className="btn" type="submit">
-            新增常用項目
-          </button>
-        </form>
       </div>
     </div>
   )

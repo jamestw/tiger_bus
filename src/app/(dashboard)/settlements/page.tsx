@@ -73,6 +73,34 @@ export default async function SettlementsPage() {
     <div>
       <h1>結算管理</h1>
 
+      {canManage && (
+        <div className="app-section">
+          <h2>產生結算單</h2>
+          <form action={generateSettlementAction} className="inline-form">
+            <div className="field">
+              <label>司機</label>
+              <select name="driverId" required defaultValue="">
+                <option value="" disabled>
+                  選擇司機
+                </option>
+                {drivers.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>月份</label>
+              <input name="month" type="month" required />
+            </div>
+            <button className="btn" type="submit">
+              產生結算單
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="app-section">
         <h2>結算單清單</h2>
         {settlements.length === 0 ? (
@@ -129,34 +157,6 @@ export default async function SettlementsPage() {
           </table>
         )}
       </div>
-
-      {canManage && (
-        <div className="app-section">
-          <h2>產生結算單</h2>
-          <form action={generateSettlementAction} className="inline-form">
-            <div className="field">
-              <label>司機</label>
-              <select name="driverId" required defaultValue="">
-                <option value="" disabled>
-                  選擇司機
-                </option>
-                {drivers.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label>月份</label>
-              <input name="month" type="month" required />
-            </div>
-            <button className="btn" type="submit">
-              產生結算單
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   )
 }
