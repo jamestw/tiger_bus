@@ -8,6 +8,7 @@ import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
 import { STATUS_LABEL } from '@/lib/trip-status-label'
 import { ClientCombobox } from './client-combobox'
+import { TripDateFields } from './trip-date-fields'
 
 async function createTripAction(formData: FormData) {
   'use server'
@@ -75,14 +76,7 @@ export default async function TripsPage() {
         <div className="app-section">
           <h2>建立行程並指派司機</h2>
           <form action={createTripAction} className="inline-form">
-            <div className="field">
-              <label>開始日期</label>
-              <input name="startDate" type="date" required />
-            </div>
-            <div className="field">
-              <label>結束日期（跨天才需填）</label>
-              <input name="endDate" type="date" />
-            </div>
+            <TripDateFields />
             <div className="field">
               <label>名稱</label>
               <input name="name" placeholder="陳先生包車" />

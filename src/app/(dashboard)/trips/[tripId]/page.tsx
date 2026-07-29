@@ -6,6 +6,7 @@ import { addTripLineItem } from '@/app/api/trips/[tripId]/line-items/handlers'
 import { updateTrip } from '@/app/api/trips/handlers'
 import { listLineItemPresets } from '@/app/api/line-item-presets/handlers'
 import { AddLineItemForm } from './add-line-item-form'
+import { TripDateFields } from '../trip-date-fields'
 import { ClientRepository } from '@/lib/repositories/client-repository'
 import { DriverRepository } from '@/lib/repositories/driver-repository'
 import { TripLineItemRepository } from '@/lib/repositories/trip-line-item-repository'
@@ -159,23 +160,10 @@ export default async function TripDetailPage({ params }: { params: { tripId: str
               <h2 style={{ marginTop: '1.25rem' }}>編輯行程</h2>
               <form action={updateTripAction} className="inline-form">
                 <input type="hidden" name="tripId" value={trip.id} />
-                <div className="field">
-                  <label>開始日期</label>
-                  <input
-                    name="startDate"
-                    type="date"
-                    defaultValue={trip.startDate.toISOString().slice(0, 10)}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label>結束日期（跨天才需填）</label>
-                  <input
-                    name="endDate"
-                    type="date"
-                    defaultValue={trip.endDate.toISOString().slice(0, 10)}
-                  />
-                </div>
+                <TripDateFields
+                  defaultStartDate={trip.startDate.toISOString().slice(0, 10)}
+                  defaultEndDate={trip.endDate.toISOString().slice(0, 10)}
+                />
                 <div className="field">
                   <label>名稱</label>
                   <input name="name" placeholder="陳先生包車" defaultValue={trip.name ?? ''} />
