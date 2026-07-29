@@ -1,19 +1,12 @@
 import { redirect } from 'next/navigation'
 import { auth, signOut } from '@/lib/auth'
 import type { Role } from '@/lib/rbac'
+import { ROLE_LABEL } from '@/lib/role-label'
 import { SidebarShell } from './sidebar-shell'
 
 async function signOutAction() {
   'use server'
   await signOut({ redirectTo: '/login' })
-}
-
-const ROLE_LABEL: Record<Role, string> = {
-  SUPERADMIN: 'Superadmin',
-  TENANT_ADMIN: '車行管理者',
-  DISPATCHER: '調度接單',
-  ACCOUNTANT: '會計',
-  DRIVER: '司機',
 }
 
 // Calendar/trips/drivers/vehicles/clients/settlements are all scoped to the
@@ -47,7 +40,11 @@ const NAV_GROUPS: { label?: string; items: { href: string; label: string; roles:
     items: [{ href: '/settlements', label: '結算管理', roles: ['TENANT_ADMIN', 'ACCOUNTANT', 'DRIVER'] }],
   },
   {
-    items: [{ href: '/settings', label: '車行設定', roles: ['TENANT_ADMIN'] }],
+    label: '設定',
+    items: [
+      { href: '/users', label: '使用者管理', roles: ['TENANT_ADMIN'] },
+      { href: '/settings', label: '車行設定', roles: ['TENANT_ADMIN'] },
+    ],
   },
 ]
 
